@@ -1,0 +1,226 @@
+<html>
+
+<head>
+  <style>
+  
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : 0px;
+      right     : 0px;
+      z-index   : 999;
+    }
+  
+  </style>
+</head>
+<body>
+
+<script src = "leap.js"               ></script>
+<script src = "three.js"              ></script>
+<script src = "stats.min.js"          ></script>
+<script src = "RiggedSkeleton.js"     ></script>
+<script src = "TrackballControls.js"  ></script>
+
+<script>
+
+  // Global Variables for THREE.JS
+  var container , camera, scene, renderer , stats;
+
+  // Global variable for leap
+  var frame, controller;
+
+  // Setting up how big we want the scene to be
+  var sceneSize = 1000;
+
+  var riggedSkeleton;
+
+  // Get everything set up
+  init();
+
+  // Start the frames rolling
+  animate();
+
+
+  function init(){
+
+    controller = new Leap.Controller();
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      sceneSize / 100 ,
+      sceneSize * 4
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = sceneSize ;
+
+
+    controls = new THREE.TrackballControls( camera );
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+
+
+    var light = new THREE.DirectionalLight( 0xaaaaff , 1);
+    light.position.set( 0 , 0 , 1 );
+    scene.add( light );
+
+     var light = new THREE.DirectionalLight( 0xffaaaa , 1);
+    light.position.set( 0 , 1 , 0 );
+    scene.add( light );
+
+
+     var light = new THREE.DirectionalLight( 0xaaffaa , 1);
+    light.position.set( 1 , 0 , 0 );
+    scene.add( light );
+
+
+
+   
+    var basis = new THREE.Object3D();
+
+    var mesh = new THREE.Mesh(
+      new THREE.BoxGeometry( 15 , 6  , 6 ),
+      new THREE.MeshLambertMaterial({color:0xcc9999})
+    );
+
+    basis.add( mesh );
+
+    
+    
+    riggedSkeleton = new RiggedSkeleton( controller );
+ 
+    riggedSkeleton.addToScene( scene );
+    riggedSkeleton.addJointMesh( basis );
+    riggedSkeleton.addHandMesh( basis );
+
+    //riggedSkeleton.hand.position.x = -300;
+
+
+  
+    skeletonSet = [];
+
+
+    for( var i = 0; i < 6; i++ ){
+
+      var index = Math.floor( Math.random() * riggedSkeleton.bones.length);
+      var bone  = riggedSkeleton.bones[ index ];
+
+
+      var rS = new RiggedSkeleton( controller );
+      rS.addToScene( bone );
+
+      var mesh = new THREE.Mesh(
+        new THREE.BoxGeometry( 10 , 4  , 4 ),
+        new THREE.MeshLambertMaterial({color:0x99cc99})
+      );
+
+      rS.addJointMesh( mesh );
+
+      rS.subSkeletons = [];
+      
+      for( var j = 0; j < 6; j ++ ){
+
+
+        var index = Math.floor( Math.random() * riggedSkeleton.bones.length);
+        var bone  = rS.bones[ index ];
+
+        var sS = new RiggedSkeleton( controller );
+
+        var mesh = new THREE.Mesh(
+          new THREE.BoxGeometry( 6 , 3  , 3 ),
+          new THREE.MeshLambertMaterial({color:0x9999cc})
+        );
+
+        sS.addJointMesh( mesh );
+
+        sS.addToScene( bone );
+       
+        rS.subSkeletons.push( sS );
+
+      }
+
+      skeletonSet.push( rS );
+
+    }
+   
+    controller.connect();
+
+
+  }
+
+
+  function animate(){
+
+    var frame = controller.frame();
+
+    controls.update();
+    riggedSkeleton.update();
+
+    for( var i = 0; i < skeletonSet.length; i++ ){
+
+      var skeleton = skeletonSet[i];
+      skeleton.update();
+      for( var j = 0; j < skeleton.subSkeletons.length; j++ ){
+
+        skeleton.subSkeletons[j].update();
+
+      }
+
+    }
+
+    stats.update();
+
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+  }
+
+
+</script>
+
+
+</body>
+</html>
