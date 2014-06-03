@@ -3,16 +3,14 @@
 
     var params = params || {};
 
-    this.size = params.size || 1;
+    this.handSize     = params.handSize     || 1;
+    this.movementSize = params.movementSize || 1;
 
     this.controller   = controller;
     
     // A flat array of all bones
     this.bones = [];
 
-    this.hand         = new THREE.Object3D();
-    this.fingers      = this.createFingers();
-     
     this.baseMatrixLeft = new THREE.Matrix4(
        0 ,  0 , 1 , 0,
        0 , -1 , 0 , 0,
@@ -29,6 +27,22 @@
 
     this.tmpMatrix    = new THREE.Matrix4();
     this.tmpQuat      = new THREE.Quaternion();
+
+    this.fingerTypes  = [ 
+      
+      "thumb"   , 
+      "index"   , 
+      "middle"  , 
+      "ring"    , 
+      "pinky" 
+    
+    ];
+
+
+    this.hand         = new THREE.Object3D();
+    this.fingers      = this.createFingers();
+
+    this.scaledMeshes       = [];
    
 
 
@@ -61,6 +75,99 @@
   }
 
 
+  RiggedSkeleton.prototype.addMeshToAll = function( mesh ){
+
+    for( var i = 0; i < this.fingers.length; i++ ){
+
+      var finger = this.fingers[i];
+
+      this.addFingerMesh( mesh , finger.type );
+
+    }
+
+  }
+
+  RiggedSkeleton.prototype.addFingerMesh = function( mesh , fingerType ){
+
+    for( var i = 0; i < this.fingers.length; i++ ){
+
+      var finger = this.fingers[i];
+
+      if( finger.type === fingerType ){
+
+        finger.metacarpal.add(    mesh.clone() );
+        finger.proximal.add(      mesh.clone() );
+        finger.intermediate.add(  mesh.clone() );
+        finger.distal.add(        mesh.clone() );
+        finger.tip.add(           mesh.clone() );
+      
+      }
+
+    }
+
+  }
+
+
+  /*
+
+     Add a mesh to a specific joint type, 
+    if a finger is also specified, than it will be added to that finger
+
+  */
+  RiggedSkeleton.prototype.addJointMesh = function( mesh , jointType , fingerType ){
+
+    for( var i = 0; i < this.fingers.length; i++ ){
+
+      var finger = this.fingers[i];
+
+      if( fingerType ){
+
+        if( fingerType === finger.type ){
+
+          finger[jointType].add( mesh.clone() );
+
+        }
+
+      }else{
+
+        finger[jointType].add( mesh.clone() );
+
+      }
+
+    }
+
+  }
+
+  /*
+
+     A scaled mesh is one that will be updated every frame, so that its 'length' matches
+     the 'length' of the finger joint, as compared to the handSize
+
+  */
+  RiggedSkeleton.prototype.addScaledMesh = function( mesh , length , jointType , fingerType ){
+
+    var newMesh         = mesh.clone();
+
+    newMesh.jointType   = jointType;
+    newMesh.fingerType  = fingerType;
+    newMesh.length      = length;
+
+    for( var i = 0; i < this.fingers.length; i++ ){
+
+      var finger = this.fingers[i];
+      if( finger.type === fingerType ){
+
+        finger[jointType].add( newMesh );
+
+      }
+
+    }
+
+
+    this.scaledMeshes.push( newMesh );
+
+  }
+
 
 
 
@@ -78,7 +185,9 @@
 
     for( var i = 0; i < 5; i++ ){
 
-      var finger = this.createFinger();
+      var type    = this.fingerTypes[ i ];
+      var finger  = this.createFinger( type );
+
       fingers.push( finger );
 
     }
@@ -94,7 +203,7 @@
      each joint on the one above it
 
   */
-  RiggedSkeleton.prototype.createFinger = function(){
+  RiggedSkeleton.prototype.createFinger = function( type ){
 
     var metacarpal    = new THREE.Object3D();
     var proximal      = new THREE.Object3D();
@@ -103,11 +212,11 @@
     var tip           = new THREE.Object3D();
 
     // push all the bones!
-    this.bones.push( metacarpal     );
-    this.bones.push( proximal       );
-    this.bones.push( intermediate   );
-    this.bones.push( distal         );
-    this.bones.push( tip            );
+    this.bones.push(  metacarpal    );
+    this.bones.push(  proximal      );
+    this.bones.push(  intermediate  );
+    this.bones.push(  distal        );
+    this.bones.push(  tip           );
 
     this.hand.add(    metacarpal    );
     metacarpal.add(   proximal      );
@@ -121,28 +230,13 @@
       proximal      : proximal,
       intermediate  : intermediate,
       distal        : distal,
-      tip           : tip
+      tip           : tip,
+
+      type          : type
 
     }
 
     return finger;
-
-  }
-
-  RiggedSkeleton.prototype.addJointMesh = function( mesh ){
-
-    for( var i = 0; i < this.fingers.length; i++ ){
-
-      var finger = this.fingers[i];
-
-      finger.metacarpal.add(    mesh.clone() );
-      finger.proximal.add(      mesh.clone() );
-      finger.intermediate.add(  mesh.clone() );
-      finger.distal.add(        mesh.clone() );
-      finger.tip.add(           mesh.clone() );
-
-
-    }
 
   }
 
@@ -159,12 +253,11 @@
 
 
 
-    // Setting references to all of the leap.js bones
-    
-    var m = frameFinger.bones[0];
-    var p = frameFinger.bones[1];
-    var i = frameFinger.bones[2];
-    var d = frameFinger.bones[3];
+    // Setting references to all of the leap.js bones 
+    var m = frameFinger.bones[0]; // metacarpal
+    var p = frameFinger.bones[1]; // proximal
+    var i = frameFinger.bones[2]; // intermediate
+    var d = frameFinger.bones[3]; // distal
 
 
 
@@ -215,8 +308,6 @@
     ourFinger.metacarpal.rotation.setFromRotationMatrix(mRelRot);
 
 
-
-
     // PROXIMAL ROTATION
     
     var pMatrix = this.matrixFromBasis( p.basis , frameHand.type );
@@ -225,7 +316,6 @@
     pRelRot.multiplyMatrices( mMatrix.clone().transpose() , pMatrix );
     
     ourFinger.proximal.rotation.setFromRotationMatrix(pRelRot);
-
 
 
     // INTERMEDIATE ROTATION
@@ -238,8 +328,6 @@
     ourFinger.intermediate.rotation.setFromRotationMatrix(iRelRot);
 
 
-
-
     // DISTAL ROTATION
     
     var dMatrix = this.matrixFromBasis( d.basis , frameHand.type );
@@ -249,7 +337,6 @@
     
     ourFinger.distal.rotation.setFromRotationMatrix(dRelRot);
 
-    
     
     // NOTE: the tip should not be rotated, or it will lead to 
     // streching in the mesh! ( or other general weirdness );
@@ -262,9 +349,13 @@
 
     if( this.frame.hands[0] ){
 
-      var frameHand     = this.frame.hands[0];
-      var frameFingers  = this.orderFingers( frameHand );
-
+      var frameHand       = this.frame.hands[0];
+      var frameFingers    = this.orderFingers( frameHand );
+  
+      var pPalm           = frameHand.palmPosition;
+      var handPos         = this.leapToScene( pPalm , this.movementSize );
+      this.hand.position  = handPos;
+      
       // Rotates our hand according to the proper basis
       this.handBasis    =  this.getHandBasis( frameHand );
       this.hand.rotation.setFromRotationMatrix( this.handBasis );
@@ -294,9 +385,7 @@
 
   RiggedSkeleton.prototype.getHandBasis = function( hand  ){
 
-
     var rotationMatrix  = this.handRotationMatrix( hand );
-
 
     // Corrector 'corrects' for which basis
     var corrector;
@@ -310,7 +399,6 @@
     rotationMatrix.multiply( corrector.clone().transpose() );
 
     return rotationMatrix;
-
 
   }
 
@@ -390,19 +478,19 @@
 
   // Converts from leap position to scene position
   
-  RiggedSkeleton.prototype.leapToScene = function( position ){
+  RiggedSkeleton.prototype.leapToScene = function( position , size ){
 
     var p = this.frame.interactionBox.normalizePoint( position );
 
-    var size = this.frame.interactionBox.size;
+    var size = size || this.frame.interactionBox.size[0];
 
     p[0] -= .5;
     p[1] -= .5;
     p[2] -= .5;
 
-    p[0] *= size[0];
-    p[1] *= size[1];
-    p[2] *= size[2];
+    p[0] *= size;
+    p[1] *= size;
+    p[2] *= size;
 
     var pos = new THREE.Vector3().fromArray( p );
 
