@@ -95,7 +95,9 @@
 
       if( finger.type === fingerType ){
 
-        finger.metacarpal.add(    mesh.clone() );
+        if( fingerType !== 'thumb' ){
+          finger.metacarpal.add(    mesh.clone() );
+        }
         finger.proximal.add(      mesh.clone() );
         finger.intermediate.add(  mesh.clone() );
         finger.distal.add(        mesh.clone() );
