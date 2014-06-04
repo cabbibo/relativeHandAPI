@@ -36,9 +36,11 @@ z-index: 999;
 
 <script src = "leap.js"               ></script>
 <script src = "three.js"              ></script>
+<script src = "jquery.min.js"         ></script>
 <script src = "stats.min.js"          ></script>
 <script src = "RiggedSkeleton.js"     ></script>
 <script src = "TrackballControls.js"  ></script>
+<script src = "ShaderLoader.js"       ></script>
 
 
 <script>
@@ -55,13 +57,25 @@ z-index: 999;
   var riggedSkeletons = [];
   var currentRiggedSkeleton = 0;
 
-  // Get everything set up
-  init();
 
-  // Start the frames rolling
-  animate();
+  var timer = { type:"f" , value:0 }
 
 
+  var shaders = new ShaderLoader('shaders');
+
+  shaders.load( 'fs-iri' , 'iri' , 'fragment' );
+  shaders.load( 'vs-iri' , 'iri' , 'vertex' );
+
+  shaders.shaderSetLoaded = function(){
+    
+    // Get everything set up
+    init();
+
+    // Start the frames rolling
+    animate();
+
+  }
+ 
   function init(){
 
     controller = new Leap.Controller();
@@ -241,6 +255,65 @@ z-index: 999;
 
     riggedSkeletons.push( riggedSkeleton );
 
+
+
+    var riggedSkeleton = new RiggedSkeleton( controller ,  {
+
+      handSize:300,
+      movementSize:200
+      
+    });
+
+    var path = "img/skybox/";
+    var format = '.jpg';
+    var urls = [
+          path + 'px' + format, path + 'nx' + format,
+          path + 'py' + format, path + 'ny' + format,
+          path + 'pz' + format, path + 'nz' + format
+        ];
+
+    var tReflection = THREE.ImageUtils.loadTextureCube( urls );
+
+
+    var tNoise  = THREE.ImageUtils.loadTexture( 'noiseLookup.jpg' );
+    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup1.png' );
+    var tNormal = THREE.ImageUtils.loadTexture( 'img/normals/rock.jpg' );
+    var uniforms = {
+
+      tReflection:{ type:"t" , value: tReflection },
+      tNoise:{ type:"t" , value: tNoise }, 
+      tIri:{ type:"t" , value: tIri },
+      lightPos: { type:"v3" , value: new THREE.Vector3( 1 , 1 , 1 ) },
+      tNormal:{type:"t",value:tNormal},
+      time:timer
+
+    }
+
+    var material = new THREE.ShaderMaterial({
+
+      uniforms: uniforms,
+      vertexShader: shaders.vertexShaders.iri,
+      fragmentShader: shaders.fragmentShaders.iri,
+      side: THREE.DoubleSide
+
+    });
+
+    var geo = new THREE.BoxGeometry( 10 , 10 , 100 , 20 , 20 , 20 );
+
+    var mesh = new THREE.Mesh( geo , material );
+
+    riggedSkeleton.addScaledFingerMesh( mesh , 'thumb' );
+    riggedSkeleton.addScaledFingerMesh( mesh , 'index' );
+    riggedSkeleton.addScaledFingerMesh( mesh , 'middle' );
+    riggedSkeleton.addScaledFingerMesh( mesh , 'ring' );
+    riggedSkeleton.addScaledFingerMesh( mesh , 'pinky' );
+
+    riggedSkeletons.push( riggedSkeleton );
+
+
+
+
+
     nextSkeleton();
 
     controller.connect();
@@ -251,7 +324,7 @@ z-index: 999;
 
   function animate(){
 
-    var frame = controller.frame();
+    timer.value += .001;
 
     controls.update();
     riggedSkeletons[ currentRiggedSkeleton ].update();
