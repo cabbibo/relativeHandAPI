@@ -2,7 +2,9 @@
 
 <head>
   <style>
-  
+
+    html{ color:#fff; }
+
     #container{
       width      : 100%;
       height     : 100%;
@@ -18,16 +20,26 @@
       right     : 0px;
       z-index   : 999;
     }
-  
+
+    a{
+color: #fff;
+position: absolute;
+z-index: 999;
+
+    }
   </style>
 </head>
 <body>
+
+  <a onclick="nextSkeleton()"> NEXT SKELETON </a>
+
 
 <script src = "leap.js"               ></script>
 <script src = "three.js"              ></script>
 <script src = "stats.min.js"          ></script>
 <script src = "RiggedSkeleton.js"     ></script>
 <script src = "TrackballControls.js"  ></script>
+
 
 <script>
 
@@ -40,7 +52,8 @@
   // Setting up how big we want the scene to be
   var sceneSize = 1000;
 
-  var riggedSkeleton;
+  var riggedSkeletons = [];
+  var currentRiggedSkeleton = 0;
 
   // Get everything set up
   init();
@@ -59,7 +72,7 @@
       50 ,
       window.innerWidth / window.innerHeight,
       sceneSize / 100 ,
-      sceneSize * 4
+      sceneSize * 40
     );
 
     // placing our camera position so it can see everything
@@ -106,21 +119,129 @@
     scene.add( light );
 
    
-    var basis = new THREE.Object3D();
+    /*var sizeBox = new THREE.Mesh( 
+      new THREE.IcosahedronGeometry( 100 , 3 ),
+      new THREE.MeshLambertMaterial({color:0xaa99})
+    );
+
+    scene.add( sizeBox );*/
+
+
+    var riggedSkeleton = new RiggedSkeleton( controller , {
+
+      movementSize: 1000,
+      handSize: 100
+      
+    });
 
     var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 3 , 3  , 10 ),
+      new THREE.BoxGeometry( 30 , 30  , 100 ),
       new THREE.MeshLambertMaterial({color:0xcc9999})
     );
 
-    basis.add( mesh );
+    riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+
+    var mesh = new THREE.Mesh(
+      new THREE.BoxGeometry( 50 , 50  , 100 ),
+      new THREE.MeshLambertMaterial({color:0x99cc99})
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'intermediate' );
+
+    var mesh = new THREE.Mesh(
+      new THREE.BoxGeometry( 50 , 50  , 100 ),
+      new THREE.MeshLambertMaterial({color:0x9999cc})
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'proximal' );
+
+    var mesh = new THREE.Mesh(
+      new THREE.IcosahedronGeometry( 3 , 1 ),
+      new THREE.MeshNormalMaterial()
+    );
+
+    riggedSkeleton.addMeshToAll( mesh );
+
+
+    riggedSkeletons.push( riggedSkeleton );
+
+
+
+
+
+    var riggedSkeleton = new RiggedSkeleton( controller , {
+
+      movementSize: 300,
+      handSize: 100
+      
+    });
+
+    var balls = new THREE.Object3D();
+
+    var mesh = new THREE.Mesh(
+      new THREE.IcosahedronGeometry( 3 , 1 ),
+      new THREE.MeshLambertMaterial({color:0x99cc99,shading:THREE.FlatShading})
+    );
+
+    mesh.position.x = -7.5;
+    balls.add( mesh );
+
+    var newMesh = mesh.clone();
+    newMesh.material = mesh.material.clone();
+    newMesh.material.color = new THREE.Color( 0x9999cc );
+    newMesh.scale.multiplyScalar( .8 );
+    newMesh.position.x = 2.5;
+
+    new THREE.MeshLambertMaterial({color:0x99cc99})
+    balls.add( newMesh );
+
+    var newMesh1 = newMesh.clone();
+    newMesh1.scale.multiplyScalar( .8 );
+    newMesh1.position.x = 7.5;
+
+    balls.add( newMesh1 );
+
+    var params = { direction:'x' }
+    riggedSkeleton.addScaledJointMesh( balls , 'intermediate' , params );
+    riggedSkeleton.addScaledJointMesh( balls , 'distal' , params );
+    riggedSkeleton.addScaledJointMesh( balls , 'proximal' , params );
+
+    riggedSkeletons.push( riggedSkeleton );
+
     
-    riggedSkeleton = new RiggedSkeleton( controller );
- 
-    riggedSkeleton.addToScene( scene );
-    riggedSkeleton.addFingerMesh( basis , 'thumb' );
-    riggedSkeleton.addJointMesh( basis , 'distal' );
-    //riggedSkeleton.addHandMesh( basis );
+
+    var riggedSkeleton = new RiggedSkeleton( controller );
+
+    var balls = new THREE.Object3D();
+
+    var mesh = new THREE.Mesh(
+      new THREE.IcosahedronGeometry( 3 , 1 ),
+      new THREE.MeshNormalMaterial()
+    );
+
+    mesh.position.x = 0;
+    balls.add( mesh );
+
+    var newMesh = mesh.clone();
+    newMesh.scale.multiplyScalar( .8 );
+    newMesh.position.x = 10;
+
+    balls.add( newMesh );
+
+    var newMesh1 = newMesh.clone();
+    newMesh1.scale.multiplyScalar( .8 );
+    newMesh1.position.x = 15;
+
+    balls.add( newMesh1 );
+
+    var params = { direction:'x' , centered: false }
+    riggedSkeleton.addScaledJointMesh( balls , 'intermediate' , params );
+    riggedSkeleton.addScaledJointMesh( balls , 'distal' , params );
+    riggedSkeleton.addScaledJointMesh( balls , 'proximal' , params );
+
+    riggedSkeletons.push( riggedSkeleton );
+
+    nextSkeleton();
 
     controller.connect();
 
@@ -133,7 +254,7 @@
     var frame = controller.frame();
 
     controls.update();
-    riggedSkeleton.update();
+    riggedSkeletons[ currentRiggedSkeleton ].update();
 
     stats.update();
 
@@ -153,6 +274,19 @@
 
   }
 
+  function nextSkeleton(){
+
+    riggedSkeletons[ currentRiggedSkeleton ].removeFromScene( scene );
+
+    currentRiggedSkeleton ++;
+
+    if( currentRiggedSkeleton === riggedSkeletons.length ){
+      currentRiggedSkeleton = 0;
+    }
+
+    riggedSkeletons[ currentRiggedSkeleton ].addToScene( scene );
+
+  }
 
 </script>
 

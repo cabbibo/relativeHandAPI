@@ -3,8 +3,8 @@
 
     var params = params || {};
 
-    this.handSize     = params.handSize     || 1;
-    this.movementSize = params.movementSize || 1;
+    this.handSize     = params.handSize     || 1000;
+    this.movementSize = params.movementSize || 100;
 
     this.controller   = controller;
     
@@ -66,7 +66,6 @@
     scene.remove( this.hand );
 
   }
-
 
   RiggedSkeleton.prototype.addHandMesh = function( mesh ){
 
@@ -146,31 +145,114 @@
      the 'length' of the finger joint, as compared to the handSize
 
   */
-  RiggedSkeleton.prototype.addScaledMesh = function( mesh , length , jointType , fingerType ){
+  RiggedSkeleton.prototype.addScaledMesh = function( object , params ){
 
-    var newMesh         = mesh.clone();
+    var params      = params || {};
+    var fingerType  = params.fingerType   || 'middle';
+    var jointType   = params.jointType    || 'distal';
+    var direction   = params.direction    || 'z' ;
+    
+    var centered   = true;
+    if( params.centered !== undefined ){
+      centered = params.centered;
+    }
+    
+    var length      = params.length;
 
-    newMesh.jointType   = jointType;
-    newMesh.fingerType  = fingerType;
-    newMesh.length      = length;
+    if( !length ){
 
-    for( var i = 0; i < this.fingers.length; i++ ){
+      length = this.getLengthOfObject( object , direction );
 
-      var finger = this.fingers[i];
-      if( finger.type === fingerType ){
+    }
 
-        finger[jointType].add( newMesh );
+    if( direction === 'x' ){
 
-      }
+      object.rotation.y = Math.PI / 2;
+
+    }else if( direction === 'y' ){
+
+      object.rotation.x = -Math.PI / 2;
 
     }
 
 
-    this.scaledMeshes.push( newMesh );
+    newObject         = object.clone();
+
+    newObject.jointType   = jointType;
+    newObject.fingerType  = fingerType;
+    newObject.length      = length;
+    newObject.direction   = direction; 
+    newObject.centered    = centered;
+
+//    newObject.position.z = -length;
+    
+
+    for( var i = 0; i < this.fingers.length; i++ ){
+
+      if( this.fingers[i].type === fingerType ){
+
+        this.fingers[i][ jointType ].add( newObject );
+        this.fingers[i][ jointType ].scaledMeshes.push( newObject );
+
+      }
+
+
+    }
 
   }
 
 
+  RiggedSkeleton.prototype.addScaledFingerMesh = function( object , fingerType , params ){
+
+    var params = params || {};
+
+    params.fingerType = fingerType;
+
+
+    if( fingerType  !== 'thumb' ){
+    
+      params.jointType = 'metacarpal'
+      this.addScaledMesh( object , params );
+
+    }
+
+    params.jointType = 'proximal'
+    this.addScaledMesh( object , params );
+
+    params.jointType = 'intermediate'
+    this.addScaledMesh( object , params );
+
+    params.jointType = 'distal'
+    this.addScaledMesh( object , params );
+
+
+  }
+
+
+  RiggedSkeleton.prototype.addScaledJointMesh = function( object , jointType , params ){
+
+    var params = params || {};
+
+    params.jointType = jointType;
+
+    for( var i = 0; i < this.fingerTypes.length; i++ ){
+
+      var fingerType = this.fingerTypes[i];
+
+      params.fingerType = fingerType;
+
+      if( !( fingerType === 'thumb' && jointType === 'metacarpal' ) ){
+      
+        this.addScaledMesh( object , params );
+
+      }
+
+
+    }
+
+  }
+
+  
 
 
 
@@ -184,6 +266,7 @@
 
 
     var fingers = [];
+
 
     for( var i = 0; i < 5; i++ ){
 
@@ -213,6 +296,12 @@
     var distal        = new THREE.Object3D();
     var tip           = new THREE.Object3D();
 
+    metacarpal.scaledMeshes   = [];
+    proximal.scaledMeshes     = [];
+    intermediate.scaledMeshes = [];
+    distal.scaledMeshes       = [];
+    tip.scaledMeshes          = [];
+
     // push all the bones!
     this.bones.push(  metacarpal    );
     this.bones.push(  proximal      );
@@ -233,7 +322,7 @@
       intermediate  : intermediate,
       distal        : distal,
       tip           : tip,
-
+     
       type          : type
 
     }
@@ -253,21 +342,22 @@
 
   RiggedSkeleton.prototype.updateFingerRig = function( frameHand , frameFinger , ourFinger ){
 
-
-
     // Setting references to all of the leap.js bones 
     var m = frameFinger.bones[0]; // metacarpal
     var p = frameFinger.bones[1]; // proximal
     var i = frameFinger.bones[2]; // intermediate
     var d = frameFinger.bones[3]; // distal
 
-
-
     // To position the metal carpal, 
     // we compare its position to the palm position
     // and apply the palms rotation to that position
+    //
+
+
+    var metaPos = this.threeDif( frameHand.palmPosition , m.prevJoint );
+    metaPos.multiplyScalar( this.scaledSize );
     
-    ourFinger.metacarpal.position = this.threeDif( frameHand.palmPosition , m.prevJoint );
+    ourFinger.metacarpal.position = metaPos;//this.threeDif( frameHand.palmPosition , m.prevJoint );
 
     var quat = new THREE.Quaternion();
     quat.setFromRotationMatrix( this.hand.matrix.clone().transpose() );
@@ -276,12 +366,23 @@
 
 
     // The remaining fingers can just be placed using z
-    
-    ourFinger.proximal.position.z     = -m.length;
-    ourFinger.intermediate.position.z = -p.length;
-    ourFinger.distal.position.z       = -i.length;
-    ourFinger.tip.position.z          = -d.length;
 
+    ourFinger.metacarpal.length   = m.length * this.scaledSize;
+    ourFinger.proximal.length     = p.length * this.scaledSize;
+    ourFinger.intermediate.length = i.length * this.scaledSize;
+    ourFinger.distal.length       = d.length * this.scaledSize;
+    ourFinger.tip.length          = 0;//t.length * this.scaledSize;
+
+    ourFinger.proximal.position.z     = - ourFinger.metacarpal.length;
+    ourFinger.intermediate.position.z = - ourFinger.proximal.length;
+    ourFinger.distal.position.z       = - ourFinger.intermediate.length;
+    ourFinger.tip.position.z          = - ourFinger.distal.length;
+
+    this.updateScaledMeshes( ourFinger.metacarpal   );
+    this.updateScaledMeshes( ourFinger.proximal     );
+    this.updateScaledMeshes( ourFinger.intermediate );
+    this.updateScaledMeshes( ourFinger.distal       );
+    this.updateScaledMeshes( ourFinger.tip          );
 
     // Saving our hand matrix for easy access
     var hMatrix = this.hand.matrix;
@@ -342,7 +443,7 @@
     
     // NOTE: the tip should not be rotated, or it will lead to 
     // streching in the mesh! ( or other general weirdness );
-
+  
   }
 
   RiggedSkeleton.prototype.update = function(){
@@ -351,6 +452,9 @@
 
     if( this.frame.hands[0] ){
 
+      //console.log( this.frame.hands[0]);
+
+      // TODO: is this the best way to scale?
       var frameHand       = this.frame.hands[0];
       var frameFingers    = this.orderFingers( frameHand );
   
@@ -367,9 +471,14 @@
         var frameFinger = frameFingers[i];
         var finger      = this.fingers[i];
 
+        if( frameFinger.type === 3 ){
+
+          this.getHandLength(frameFinger);
+
+        }
+
         // Updates each finger to have the proper rotations
         this.updateFingerRig( frameHand ,  frameFinger , finger );
-
 
       }
 
@@ -384,6 +493,18 @@
      UTILS
 
   */
+  RiggedSkeleton.prototype.getHandLength = function( finger ){
+
+    this.handLength = 0;
+    for( var i = 0; i < finger.bones.length; i++ ){
+
+      this.handLength += finger.bones[i].length;
+
+    }
+
+    this.scaledSize = this.handSize / this.handLength;
+
+  }
 
   RiggedSkeleton.prototype.getHandBasis = function( hand  ){
 
@@ -513,5 +634,85 @@
 
   }
 
+  // When we pass in a scaled mesh, attempts to compute the bounding box
+  // from: http://stackoverflow.com/questions/15492857/any-way-to-get-a-bounding-box-from-a-three-js-object3d
+  RiggedSkeleton.prototype.computeBoundingBox = function( object ){
+    
+    
+    if (object instanceof THREE.Object3D){
+     
+      var minX = 0;
+      var minY = 0;
+      var minZ = 0;
+      var maxX = 0;
+      var maxY = 0;
+      var maxZ = 0;
+      
+      object.traverse (function (mesh){
+        
+        if (mesh instanceof THREE.Mesh){
+            
+            mesh.geometry.computeBoundingBox();
+            var bBox = mesh.geometry.boundingBox;
 
+            var pos = mesh.position;
+            // compute overall bbox
+            minX = Math.min( minX , bBox.min.x + pos.x );
+            minY = Math.min( minY , bBox.min.y + pos.y );
+            minZ = Math.min( minZ , bBox.min.z + pos.z );
+            maxX = Math.max( maxX , bBox.max.x + pos.x );
+            maxY = Math.max( maxY , bBox.max.y + pos.y );
+            maxZ = Math.max( maxZ , bBox.max.z + pos.z );
+        }
+      
+      });
+
+      var bBox_min = new THREE.Vector3( minX , minY , minZ );
+      var bBox_max = new THREE.Vector3( maxX , maxY , maxZ );
+      var bBox_new = new THREE.Box3( bBox_min , bBox_max );
+     
+      return bBox_new;
+    
+    }
+
+  }
+
+
+  RiggedSkeleton.prototype.getLengthOfObject = function( object , direction ){
+
+    var boundingBox = this.computeBoundingBox( object );
+
+    var length = boundingBox.max[direction] - boundingBox.min[direction] 
+
+    return Math.abs( length );
+
+
+  }
+
+  RiggedSkeleton.prototype.updateScaledMeshes = function( joint ){
+
+    for( var i = 0; i < joint.scaledMeshes.length; i++ ){
+
+      var mesh = joint.scaledMeshes[i];
+
+      var newScale  = joint.length / mesh.length;
+
+      //console.log( newScale );
+
+      mesh.scale.x = newScale;
+      mesh.scale.y = newScale;
+      mesh.scale.z = newScale;
+
+      if( mesh.centered  ){
+      
+        mesh.position.z = - ( mesh.length * newScale )  /  2;
+      
+      }else{
+      
+
+      }
+
+    }
+
+  }
 
