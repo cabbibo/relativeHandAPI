@@ -16,7 +16,7 @@
   varying vec3 vLightDir;
   varying mat3 vNormalMat;
 
-  const float noise_strength = 30000.1;
+  const float noise_strength = .2;
   
   $simplex
   
@@ -35,11 +35,12 @@
 
   
 
-  void main(void)
-  {
+  void main(void)  {
 
 
     vec3 tNorm = texture2D( tNormal , vUv ).xyz;
+
+    tNorm = normalize( tNorm * tNorm * tNorm * tNorm );
     
     vec3 xLess  = vec3( vPos.xy - vec2(.0001, 0.) , fractNoise( vec2( vUv.x - .0001 , vUv.y )) );
     vec3 xMore  = vec3( vPos.xy + vec2(.0001, 0.) , fractNoise( vec2( vUv.x + .0001 , vUv.y )) );
@@ -51,24 +52,24 @@
 
    
   					
-    vec3 newNormal = normalize(normalize( cross( xDif , yDif ))+tNorm);
+    vec3 newNormal = normalize(normalize( cross( xDif , yDif ))+tNorm * 4.);
 
      vec3 nNormal = normalize( vNormalMat * newNormal  );
      vec3 nWiew = normalize(vView);
      vec3 nReflection = normalize( reflect( vView , nNormal )); 
 
     float s1 = snoise( vUv * 50.1);
-    float s2 = snoise( vUv * 300.5);
-    float s3 = snoise( vUv * 1.9 );
+    float s2 = snoise( vUv * 240.1);
+    float s3 = snoise( vUv * 100.9 );
     vec3 noise_vector = ( vec3( s1 , s2 , s3 ) ) * noise_strength ;
 
       //fr = dot(vNormal, vWiew);							    //facing ratio
 
      vec3 refl = reflect( vLightDir , nNormal );
-    float facingRatio = dot(  nNormal, refl);
+    float facingRatio = abs( dot(  nNormal, refl) );
 
-     float newDot = dot( normalize( nNormal + noise_vector), nWiew );
-     float inverse_dot_view = 1.0 - max( abs( newDot ) , 0.0);
+     float newDot = dot( normalize( nNormal ), nWiew );
+     float inverse_dot_view = 1.0 - max( newDot  , 0.0);
      vec3 lookup_table_color = texture2D( tIri , vec2( inverse_dot_view * facingRatio , 0.0)).rgb;
 
     vec3 colorRefl = abs(nReflection * .5 + vec3( .5 ));
