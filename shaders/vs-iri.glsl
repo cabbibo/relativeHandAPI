@@ -16,8 +16,9 @@
 
   $simplex
 
-  float fractNoise( vec2 value ){
+  float fractNoise( vec2 v ){
 
+    vec2 value = vec2( abs(v.x - .5 ) * 2. , abs( v.y - .5 ) * 2. );
     float s1 = snoise( value * .9  + vec2(  time * 3. , time * .2 ));
     float s2 = snoise( value * 2.9 + vec2( time * .4  , time * .9 ))*.5;
     float s3 = snoise( value * 5.9 + vec2(  time * 1. , time * .56 ))*.2;
@@ -55,7 +56,10 @@
     //normal = nPos;
 
     vDisplacement = fractNoise( vUv ) * 4.;
-    vPos = vec3( position.xy , vDisplacement );
+
+    float distanceToEdge = pow( (.5 -  abs(vUv.x - .5 ) ) * (.5 -  abs(vUv.y - .5 ) ) , .5 );
+
+    vPos = position + normal * vDisplacement * distanceToEdge * 4.;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4( vPos , 1.0 );
     vUv = uv;

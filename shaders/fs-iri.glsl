@@ -20,8 +20,10 @@
   
   $simplex
   
-  float fractNoise( vec2 value ){
+  float fractNoise( vec2 v ){
 
+    vec2 value = vec2( abs(v.x - .5 ) * 2. , abs( v.y - .5 ) * 2. );
+    
     float s1 = snoise( value * .9  + vec2(  time * 3. , time * .2 ));
     float s2 = snoise( value * 2.9 + vec2( time * .4  , time * .9 ))*.5;
     float s3 = snoise( value * 5.9 + vec2(  time * 1. , time * .56 ))*.2;
@@ -40,7 +42,7 @@
 
     vec3 tNorm = texture2D( tNormal , vUv ).xyz;
 
-    tNorm = normalize( tNorm * tNorm * tNorm * tNorm );
+    tNorm = normalize( tNorm  );
     
     vec3 xLess  = vec3( vPos.xy - vec2(.0001, 0.) , fractNoise( vec2( vUv.x - .0001 , vUv.y )) );
     vec3 xMore  = vec3( vPos.xy + vec2(.0001, 0.) , fractNoise( vec2( vUv.x + .0001 , vUv.y )) );
@@ -52,7 +54,8 @@
 
    
   					
-    vec3 newNormal = normalize(normalize( cross( xDif , yDif ))+tNorm * 4.);
+    vec3 crossNorm = normalize( cross( xDif , yDif ));
+    vec3 newNormal = normalize( crossNorm + tNorm * 20.);
 
      vec3 nNormal = normalize( vNormalMat * newNormal  );
      vec3 nWiew = normalize(vView);

@@ -132,7 +132,12 @@
 
     basis.add( mesh );
     
-    riggedSkeleton = new RiggedSkeleton( controller );
+    riggedSkeleton = new RiggedSkeleton( controller ,  {
+
+      handSize:300,
+      movementSize:200
+      
+    });
  
     riggedSkeleton.addToScene( scene );
     //riggedSkeleton.addFingerMesh( basis , 'thumb' );
@@ -151,8 +156,8 @@
 
 
     var tNoise  = THREE.ImageUtils.loadTexture( 'noiseLookup.jpg' );
-    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup1.png' );
-    var tNormal = THREE.ImageUtils.loadTexture( 'img/normals/chesterfield.png' );
+    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup.png' );
+    var tNormal = THREE.ImageUtils.loadTexture( 'img/normals/rock.png' );
     var uniforms = {
 
 tReflection:{ type:"t" , value: tReflection },
@@ -164,7 +169,6 @@ tReflection:{ type:"t" , value: tReflection },
 
     }
 
-
     var material = new THREE.ShaderMaterial({
 
       uniforms: uniforms,
@@ -174,14 +178,20 @@ tReflection:{ type:"t" , value: tReflection },
 
     });
 
-    var geo = new THREE.PlaneGeometry( 100 , 100 , 100 , 100 );
-    //var geo = new THREE.BoxGeometry( 100 , 100 , 100 , 20 , 20 , 20 );
+    //var geo = new THREE.PlaneGeometry( 100 , 100 , 100 , 100 );
+    var geo = new THREE.BoxGeometry( 10 , 10 , 100 , 20 , 20 , 20 );
    /* var geo = new THREE.SphereGeometry( 10, 100 , 100  );
-    var geo = new THREE.IcosahedronGeometry( 10, 6  );*/
+   var geo = new THREE.IcosahedronGeometry( 10, 6  );*/
 
     window.mesh = new THREE.Mesh( geo , material );
 
-       scene.add( window.mesh );
+    scene.add( window.mesh );
+
+    riggedSkeleton.addScaledFingerMesh( window.mesh , 'thumb' );
+    riggedSkeleton.addScaledFingerMesh( window.mesh , 'index' );
+    riggedSkeleton.addScaledFingerMesh( window.mesh , 'middle' );
+    riggedSkeleton.addScaledFingerMesh( window.mesh , 'ring' );
+    riggedSkeleton.addScaledFingerMesh( window.mesh , 'pinky' );
 
 
 
