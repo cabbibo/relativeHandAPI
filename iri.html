@@ -151,7 +151,7 @@
 
 
     var tNoise  = THREE.ImageUtils.loadTexture( 'noiseLookup.jpg' );
-    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup2.png' );
+    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup.png' );
     var tNormal = THREE.ImageUtils.loadTexture( 'img/rock.png' );
     var uniforms = {
 
@@ -170,12 +170,12 @@ tReflection:{ type:"t" , value: tReflection },
       uniforms: uniforms,
       vertexShader: shaders.vertexShaders.iri,
       fragmentShader: shaders.fragmentShaders.iri,
-     // side: THREE.DoubleSide
+      side: THREE.DoubleSide
 
     });
 
     var geo = new THREE.PlaneGeometry( 100 , 100 , 20 , 20 );
-    var geo = new THREE.BoxGeometry( 100 , 100 , 100 , 20 , 20 , 20 );
+    //var geo = new THREE.BoxGeometry( 100 , 100 , 100 , 20 , 20 , 20 );
    /* var geo = new THREE.SphereGeometry( 10, 100 , 100  );
     var geo = new THREE.IcosahedronGeometry( 10, 6  );*/
 

@@ -16,13 +16,13 @@
 
   $simplex
 
-  float fractNoise( vec3 value ){
+  float fractNoise( vec2 value ){
 
-    float s1 = snoise( value * .9  + vec3(  time * 3. , time * .2  , time * .4));
-    float s2 = snoise( value * 2.9 + vec3( time * .4  , time * .9 , time * 3.223))*.5;
-    float s3 = snoise( value * 5.9 + vec3(  time * 1. , time * .56, time * .91 ))*.2;
-    float s4 = snoise( value * 20.9+ vec3( time * .8 , time * 1.1, time * 4.34 ) )*.01;
-    float s5 = snoise( value * 10.9 + vec3(  time * 2., time * 4.0, time * 1.42 ))*.04;
+    float s1 = snoise( value * .9  + vec2(  time * 3. , time * .2 ));
+    float s2 = snoise( value * 2.9 + vec2( time * .4  , time * .9 ))*.5;
+    float s3 = snoise( value * 5.9 + vec2(  time * 1. , time * .56 ))*.2;
+    float s4 = snoise( value * 20.09+ vec2( time * .8 , time * 1.1 ) )*.01;
+    float s5 = snoise( value * 10.9 + vec2(  time * 2., time * 4.0 ))*.04;
 
 
     return s1+s2+s3+s4+s5;
@@ -30,7 +30,14 @@
   }
 
 
+  vec3 newCoord( vec3 pos, vec2 value ){
 
+    float displace = fractNoise( value );
+
+
+    return pos + vec3( 0. , 0. , (( displace * .03 ) + 1. ) );
+
+  }
   
   void main(void)
   {
@@ -39,7 +46,7 @@
     vUv = uv;
 
     
-    //vec3 actual = newCoord( position , vUv );
+    vec3 actual = newCoord( position , vUv );
 
     vec3 nPos = normalize( position );
 
@@ -47,8 +54,8 @@
 
     //normal = nPos;
 
-    vDisplacement = fractNoise( normalize( position ) ) * 4.;
-    vPos = vec3( position.xyz ) + normalize( position ) * vDisplacement;
+    vDisplacement = fractNoise( vUv ) * 4.;
+    vPos = vec3( position.xy , vDisplacement );
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4( vPos , 1.0 );
     vUv = uv;

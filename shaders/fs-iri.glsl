@@ -16,7 +16,7 @@
   varying vec3 vLightDir;
   varying mat3 vNormalMat;
 
-  const float noise_strength =.1;
+  const float noise_strength = 30000.1;
   
   $simplex
   
@@ -57,9 +57,9 @@
      vec3 nWiew = normalize(vView);
      vec3 nReflection = normalize( reflect( vView , nNormal )); 
 
-    float s1 = snoise( vPos *nReflection *  .1);
-    float s2 = snoise( vPos * nReflection *  .5);
-    float s3 = snoise( vPos * nReflection *  .9 );
+    float s1 = snoise( vUv * 50.1);
+    float s2 = snoise( vUv * 300.5);
+    float s3 = snoise( vUv * 1.9 );
     vec3 noise_vector = ( vec3( s1 , s2 , s3 ) ) * noise_strength ;
 
       //fr = dot(vNormal, vWiew);							    //facing ratio
@@ -73,7 +73,7 @@
 
     vec3 colorRefl = abs(nReflection * .5 + vec3( .5 ));
     vec3 colorNorm =abs( nNormal * .5 + vec3( .5 ));
-     gl_FragColor.rgb = vec3( 1.5 , 1.5 , 5. ) * textureCube( tReflection , nReflection ).rgb * textureCube( tReflection , nReflection ).rgb *textureCube( tReflection , nReflection ).rgb * 1.5 * lookup_table_color ;
+     gl_FragColor.rgb = textureCube( tReflection , nReflection ).rgb * textureCube( tReflection , nReflection ).rgb *textureCube( tReflection , nReflection ).rgb * 1.5 * lookup_table_color ;
      gl_FragColor.a = 1.;//vDisplacement*.1 + .9;
 
      /*gl_FragColor += texture2D( tNormal , vUv );
