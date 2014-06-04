@@ -68,7 +68,7 @@
      vec3 refl = reflect( vLightDir , nNormal );
     float facingRatio = abs( dot(  nNormal, refl) );
 
-     float newDot = dot( normalize( nNormal ), nWiew );
+     float newDot = dot( normalize( nNormal + noise_vector ), nWiew );
      float inverse_dot_view = 1.0 - max( newDot  , 0.0);
      vec3 lookup_table_color = texture2D( tIri , vec2( inverse_dot_view * facingRatio , 0.0)).rgb;
 
