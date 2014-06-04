@@ -84,5 +84,5 @@
 
      gl_FragColor = normalize( gl_FragColor );*/
 
-     //gl_FragColor.rgb = nNormal;//abs(nNormal);
+     gl_FragColor.rgb *= vec3( 2. , .7, 2. );//abs(nNormal);
   } 
