@@ -26,417 +26,15 @@
 <script src = "leap.js"               ></script>
 <script src = "three.js"              ></script>
 <script src = "stats.min.js"          ></script>
+<script src = "jquery.min.js"         ></script>
 <script src = "RiggedSkeleton.js"     ></script>
 <script src = "TrackballControls.js"  ></script>
-<!-- Shaders from: https://github.com/diegoinacio/shading/blob/master/glsl/iridescence_simple/iridescence_frag -->
-<script id="vertexShader" type="x-shader/x-vertex">
+<script src = "ShaderLoader.js"       ></script>
 
-  varying vec3 vPos;
-  varying float fr;
-  varying vec3 vNormal;
-  varying vec3 vView;
-  varying vec3 vWiew;
-
-  varying vec2 vUv;
-  void main(){
-      vUv = uv;
-      vPos = position;							    //vertex position vector
-      vNormal = normal;			//vertex normal vector
-      vView = ( modelViewMatrix * vec4( normal, 1.0 )).xyz;	    //eye to vertex vector
-      vWiew = normalize(-vView);						//normalized vertex to eye vector
-      fr = dot(vNormal, vWiew);							    //facing ratio
-      gl_Position = projectionMatrix * modelViewMatrix * vec4( position , 1.0 );
-  }
-
-</script>
-<script id="fragmentShader" type="x-shader/x-fragment">
-
-  varying vec3 P;
-  varying float fr;
-
-  float setRange(float value, float oMin, float oMax, float iMin, float iMax){
-      return iMin + ((value - oMin)/(oMax - oMin)) * (iMax - iMin);
-  }
-
-  float diNoise(vec3 pos){
-      //noise function to create irregularity
-      float mult = 1.;
-      float oset = 45.;		//offset
-      return	sin(pos.x*mult*2. + 12. + oset) + cos(pos.z*mult + 21. + oset) *
-          sin(pos.y*mult*2. + 23. + oset) + cos(pos.y*mult + 32. + oset) *
-          sin(pos.z*mult*2. + 34. + oset) + cos(pos.x*mult + 43. + oset);
-  }
-
-  vec3 iridescence(float orient){
-      //this function returns a iridescence value based on orientation
-      vec3 irid;
-      float freq = 1.;
-      float oset = 2.;		//offset
-      float noiseMult = .01;
-      irid.x = abs(cos(orient*freq + diNoise(P)*noiseMult + 1. + oset));
-      irid.y = abs(cos(orient*freq + diNoise(P)*noiseMult + 2. + oset));
-      irid.z = abs(cos(orient*freq + diNoise(P)*noiseMult + 3. + oset));
-      return irid;
-  }
-
-  void main(){
-      float Ki = 1.0;			//iridescence multiplicator
-      vec4 iridColor = vec4(iridescence(fr), 1.0) ;//* setRange(pow(1. - fr, 1./0.75), 0., 1., 0.1, 1.);
-      gl_FragColor = iridColor*Ki;
-  }
-
-</script>
-
-
-
-<script id="vertexShader1" type="x-shader/x-vertex">
-
-varying vec3 Normal;
-varying vec3 EyeDir;
-uniform samplerCube tReflection;
-
-void main()
-{
-//mat4 normalMatrix = transpose(inverse(modelView))
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position , 1.0 );
-        Normal = normalMatrix * normal;//( modelViewMatrix * vec4(normal,1.0)).xyz;
-        EyeDir = ( modelViewMatrix * vec4( position , 1.0 )).xyz;
-}
-
-</script>
-<script id="fragmentShader1" type="x-shader/x-fragment">
-
-varying vec3 Normal;
-varying vec3 EyeDir;
-
-uniform samplerCube tReflection;
-
- void main(void)
- {
-    vec3 reflectedDirection = normalize(reflect(EyeDir, normalize(Normal)));
-    reflectedDirection.y = -reflectedDirection.y;
-    vec4 fragColor = textureCube(tReflection, reflectedDirection);
-    gl_FragColor = fragColor;
-}
-
-</script>
-<!-- Converted from: http://www.sfdm.scad.edu/faculty/mkesson/vsfx419/wip/best/winter11/megan_stifter/iridescence_shader.html -->
-
-<script id="fragIri" type="x-shader/x-fragment">
-  
-  uniform samplerCube tReflection;
-  uniform sampler2D   tIri;
-  uniform sampler2D   tNoise;
-  uniform sampler2D tNormal;
- 
-  uniform float time;
-
-  varying vec3 vPos;
-  varying float fr;
-  varying vec3 vNormal;
-  varying vec3 vView;
-  varying vec2 vUv;
-  varying float vDisplacement;
-
-  varying vec3 vLightDir;
-  varying mat3 vNormalMat;
-
-  //const float noise_strength = .5;
-
-
-//
-// Description : Array and textureless GLSL 2D simplex noise function.
-//      Author : Ian McEwan, Ashima Arts.
-//  Maintainer : ijm
-//     Lastmod : 20110822 (ijm)
-//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
-//               Distributed under the MIT License. See LICENSE file.
-//               https://github.com/ashima/webgl-noise
-// 
-
-vec3 mod289(vec3 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec2 mod289(vec2 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec3 permute(vec3 x) {
-  return mod289(((x*34.0)+1.0)*x);
-}
-
-float snoise(vec2 v)
-  {
-  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-                     -0.577350269189626,  // -1.0 + 2.0 * C.x
-                      0.024390243902439); // 1.0 / 41.0
-// First corner
-  vec2 i  = floor(v + dot(v, C.yy) );
-  vec2 x0 = v -   i + dot(i, C.xx);
-
-// Other corners
-  vec2 i1;
-  //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
-  //i1.y = 1.0 - i1.x;
-  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  // x0 = x0 - 0.0 + 0.0 * C.xx ;
-  // x1 = x0 - i1 + 1.0 * C.xx ;
-  // x2 = x0 - 1.0 + 2.0 * C.xx ;
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-
-// Permutations
-  i = mod289(i); // Avoid truncation effects in permutation
-  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-		+ i.x + vec3(0.0, i1.x, 1.0 ));
-
-  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-  m = m*m ;
-  m = m*m ;
-
-// Gradients: 41 points uniformly over a line, mapped onto a diamond.
-// The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
-
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-
-// Normalise gradients implicitly by scaling m
-// Approximation of: m *= inversesqrt( a0*a0 + h*h );
-  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-
-// Compute final noise value at P
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
-}
-
-
-  const float noise_strength = 30000.1;
-  
-  float fractNoise( vec2 value ){
-
-    float s1 = snoise( value * .9  + vec2(  time * 3. , time * .2 ));
-    float s2 = snoise( value * 2.9 + vec2( time * .4  , time * .9 ))*.5;
-    float s3 = snoise( value * 5.9 + vec2(  time * 1. , time * .56 ))*.2;
-    float s4 = snoise( value * 20.09+ vec2( time * .8 , time * 1.1 ) )*.01;
-    float s5 = snoise( value * 10.9 + vec2(  time * 2., time * 4.0 ))*.04;
-
-
-    return s1+s2+s3+s4+s5;
-
-  }
-
-
-
-  void main(void)
-  {
-
-
-    vec3 tNorm = texture2D( tNormal , vUv ).xyz;
-    
-    vec3 xLess  = vec3( vPos.xy - vec2(.0001, 0.) , fractNoise( vec2( vUv.x - .0001 , vUv.y )) );
-    vec3 xMore  = vec3( vPos.xy + vec2(.0001, 0.) , fractNoise( vec2( vUv.x + .0001 , vUv.y )) );
-    vec3 yLess  = vec3( vPos.xy - vec2( 0. , .0001), fractNoise( vec2( vUv.x , vUv.y - .0001 )) );
-    vec3 yMore  = vec3( vPos.xy + vec2( 0. , .0001), fractNoise( vec2( vUv.x , vUv.y + .0001 )) );
-
-    vec3 xDif = xMore - xLess;
-    vec3 yDif = yMore - yLess;
-
-   
-  					
-    vec3 newNormal = normalize(normalize( cross( xDif , yDif ))+tNorm);
-
-     vec3 nNormal = normalize( vNormalMat * newNormal  );
-     vec3 nWiew = normalize(vView);
-     vec3 nReflection = normalize( reflect( vView , nNormal )); 
-
-    float s1 = snoise( vUv * 50.1);
-    float s2 = snoise( vUv * 300.5);
-    float s3 = snoise( vUv * 1.9 );
-    vec3 noise_vector = ( vec3( s1 , s2 , s3 ) ) * noise_strength ;
-
-      //fr = dot(vNormal, vWiew);							    //facing ratio
-
-     vec3 refl = reflect( vLightDir , nNormal );
-    float facingRatio = dot(  nNormal, refl);
-
-     float newDot = dot( normalize( nNormal + noise_vector), nWiew );
-     float inverse_dot_view = 1.0 - max( newDot , 0.0);
-     vec3 lookup_table_color = texture2D( tIri , vec2( inverse_dot_view * facingRatio , 0.0)).rgb;
-
-    vec3 colorRefl = abs(nReflection * .5 + vec3( .5 ));
-    vec3 colorNorm =abs( nNormal * .5 + vec3( .5 ));
-     gl_FragColor.rgb = textureCube( tReflection , nReflection ).rgb * textureCube( tReflection , nReflection ).rgb *textureCube( tReflection , nReflection ).rgb * 1.5 * lookup_table_color ;
-     gl_FragColor.a = 1.;//vDisplacement*.1 + .9;
-
-     /*gl_FragColor += texture2D( tNormal , vUv );
-
-     gl_FragColor = normalize( gl_FragColor );*/
-
-     //gl_FragColor.rgb = nNormal;//abs(nNormal);
-  } 
-
-</script>
-
-<script id="vertIri" type="x-shader/x-vertex">
-
-  uniform vec3 lightPos;
-  uniform sampler2D tNormal;
-  uniform float time;
-
-  varying vec3 vView;
-  varying vec3 vNormal;
-  varying vec2 vUv;
-  varying vec3 vPos;
-
-  varying float fr;
-
-  varying mat3 vNormalMat;
-  varying vec3 vLightDir;
-  varying float vDisplacement;
-
-
-
-
-//
-// Description : Array and textureless GLSL 2D simplex noise function.
-//      Author : Ian McEwan, Ashima Arts.
-//  Maintainer : ijm
-//     Lastmod : 20110822 (ijm)
-//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
-//               Distributed under the MIT License. See LICENSE file.
-//               https://github.com/ashima/webgl-noise
-// 
-
-vec3 mod289(vec3 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec2 mod289(vec2 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec3 permute(vec3 x) {
-  return mod289(((x*34.0)+1.0)*x);
-}
-
-float snoise(vec2 v)
-  {
-  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-                     -0.577350269189626,  // -1.0 + 2.0 * C.x
-                      0.024390243902439); // 1.0 / 41.0
-// First corner
-  vec2 i  = floor(v + dot(v, C.yy) );
-  vec2 x0 = v -   i + dot(i, C.xx);
-
-// Other corners
-  vec2 i1;
-  //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
-  //i1.y = 1.0 - i1.x;
-  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  // x0 = x0 - 0.0 + 0.0 * C.xx ;
-  // x1 = x0 - i1 + 1.0 * C.xx ;
-  // x2 = x0 - 1.0 + 2.0 * C.xx ;
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-
-// Permutations
-  i = mod289(i); // Avoid truncation effects in permutation
-  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-		+ i.x + vec3(0.0, i1.x, 1.0 ));
-
-  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-  m = m*m ;
-  m = m*m ;
-
-// Gradients: 41 points uniformly over a line, mapped onto a diamond.
-// The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
-
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-
-// Normalise gradients implicitly by scaling m
-// Approximation of: m *= inversesqrt( a0*a0 + h*h );
-  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-
-// Compute final noise value at P
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
-}
-
-  
-  float fractNoise( vec2 value ){
-
-    float s1 = snoise( value * .9  + vec2(  time * 3. , time * .2 ));
-    float s2 = snoise( value * 2.9 + vec2( time * .4  , time * .9 ))*.5;
-    float s3 = snoise( value * 5.9 + vec2(  time * 1. , time * .56 ))*.2;
-    float s4 = snoise( value * 20.09+ vec2( time * .8 , time * 1.1 ) )*.01;
-    float s5 = snoise( value * 10.9 + vec2(  time * 2., time * 4.0 ))*.04;
-
-
-    return s1+s2+s3+s4+s5;
-
-  }
-
-
-  vec3 newCoord( vec3 pos, vec2 value ){
-
-    float displace = fractNoise( value );
-
-
-    return pos + vec3( 0. , 0. , (( displace * .03 ) + 1. ) );
-
-  }
-  
-  void main(void)
-  {
-
-    vPos = position;
-    vUv = uv;
-
-    
-    vec3 actual = newCoord( position , vUv );
-
-    vec3 nPos = normalize( position );
-
-
-
-    //normal = nPos;
-
-    vDisplacement = fractNoise( vUv ) * 4.;
-    vPos = vec3( position.xy , vDisplacement );
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4( vPos , 1.0 );
-    vUv = uv;
-    vPos = position;
-    vView = modelViewMatrix[3].xyz;
-    vNormal = normalMatrix *  normal ;
-    vNormalMat = normalMatrix;
-
-    vec3 lightDir = normalize( lightPos -  (modelViewMatrix * vec4( vPos , 1.0 )).xyz );
-
-    vLightDir = lightDir;
-    vec3 refl = reflect( lightDir , vNormal );
-    fr = dot(  vNormal, refl);							    //facing ratio
-    
-  }
-
-</script>
 
 <script>
 
 
-console.log('shas' );
   // Global Variables for THREE.JS
   var container , camera, scene, renderer , stats;
 
@@ -450,11 +48,22 @@ console.log('shas' );
 
   var timer = { type:"f" , value:0 }
 
-  // Get everything set up
-  init();
 
-  // Start the frames rolling
-  animate();
+  var shaders = new ShaderLoader('shaders');
+
+  shaders.load( 'fs-iri' , 'iri' , 'fragment' );
+  shaders.load( 'vs-iri' , 'iri' , 'vertex' );
+
+  shaders.shaderSetLoaded = function(){
+    
+    // Get everything set up
+    init();
+
+    // Start the frames rolling
+    animate();
+
+  }
+ 
 
 
   function init(){
@@ -559,14 +168,15 @@ tReflection:{ type:"t" , value: tReflection },
     var material = new THREE.ShaderMaterial({
 
       uniforms: uniforms,
-      vertexShader: document.getElementById( 'vertIri' ).textContent,
-      fragmentShader: document.getElementById( 'fragIri' ).textContent,
-      side: THREE.DoubleSide,
+      vertexShader: shaders.vertexShaders.iri,
+      fragmentShader: shaders.fragmentShaders.iri,
 
 
     });
 
-    var geo = new THREE.PlaneGeometry( 100 , 100 , 20 , 20 );
+    var geo = new THREE.BoxGeometry( 100 , 100 , 100 , 20 , 20 , 20 );
+    var geo = new THREE.SphereGeometry( 10, 100 , 100  );
+    var geo = new THREE.IcosahedronGeometry( 10, 6  );
 
     window.mesh = new THREE.Mesh( geo , material );
 
