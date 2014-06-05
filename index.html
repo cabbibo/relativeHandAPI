@@ -274,9 +274,7 @@ z-index: 999;
     mesh.scale.multiplyScalar( .03 );
     mesh.rotation.x = -Math.PI/2;
 
-    riggedSkeleton.addFingerMesh( mesh , 'thumb' );
-    riggedSkeleton.addJointMesh( mesh , 'proximal' );
-   
+    riggedSkeleton.addMeshToAll( mesh );   
 
     riggedSkeletons.push( riggedSkeleton );
 
