@@ -716,3 +716,12 @@
 
   }
 
+
+
+  RiggedSkeleton.prototype.exportToSkinnedMesh = function( skinnedMesh ){
+
+
+
+
+  }
+

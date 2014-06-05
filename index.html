@@ -41,6 +41,7 @@ z-index: 999;
 <script src = "RiggedSkeleton.js"     ></script>
 <script src = "TrackballControls.js"  ></script>
 <script src = "ShaderLoader.js"       ></script>
+<script src = "OBJLoader.js"       ></script>
 
 
 <script>
@@ -57,6 +58,39 @@ z-index: 999;
   var riggedSkeletons = [];
   var currentRiggedSkeleton = 0;
 
+  var skullGeo;
+  var boneGeo;
+
+  var loaded = 0;
+  var neededToLoad = 3;
+
+
+
+  var loader  = new THREE.OBJLoader();
+  loader.load( 'bone.obj' , function( obj ){
+
+      console.log('sdadsa');
+      console.log( obj );
+
+      boneGeo = obj.children[0].geometry//.geometry;
+      console.log( boneGeo );
+      onLoad();
+
+
+  });
+
+  loader.load( 'skull1.obj' , function( obj ){
+
+      console.log('sdadsa');
+      console.log( obj );
+
+      skullGeo = obj.children[0].geometry//.geometry;
+      console.log( boneGeo );
+      onLoad();
+
+
+  });
+
 
   var timer = { type:"f" , value:0 }
 
@@ -67,13 +101,7 @@ z-index: 999;
   shaders.load( 'vs-iri' , 'iri' , 'vertex' );
 
   shaders.shaderSetLoaded = function(){
-    
-    // Get everything set up
-    init();
-
-    // Start the frames rolling
-    animate();
-
+   onLoad();
   }
  
   function init(){
@@ -132,7 +160,17 @@ z-index: 999;
     light.position.set( 1 , 0 , 0 );
     scene.add( light );
 
-   
+  
+
+    var skybox = new THREE.Mesh( 
+        skullGeo,
+        new THREE.MeshLambertMaterial({color:0xffaaaa, side: THREE.DoubleSide})
+    );
+
+    skybox.scale.multiplyScalar( 50 );
+
+    skybox.position.y = -10000;
+    scene.add( skybox );
     /*var sizeBox = new THREE.Mesh( 
       new THREE.IcosahedronGeometry( 100 , 3 ),
       new THREE.MeshLambertMaterial({color:0xaa99})
@@ -179,6 +217,68 @@ z-index: 999;
 
     riggedSkeletons.push( riggedSkeleton );
 
+
+   /*
+
+
+      Skeleton
+
+  */
+    var riggedSkeleton = new RiggedSkeleton( controller , {
+
+      movementSize: 10,
+      handSize: 100
+      
+    });
+
+    var params = { direction:'x' , length:600 }
+
+    var mesh = new THREE.Mesh(
+      boneGeo,
+      new THREE.MeshLambertMaterial({color:0xffaaaa})
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'distal' , params );
+
+    var mesh = new THREE.Mesh(
+      boneGeo,
+      new THREE.MeshLambertMaterial({color:0xffaaaa})
+      );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'intermediate' , params );
+
+    var mesh = new THREE.Mesh(
+      boneGeo,
+      new THREE.MeshLambertMaterial({color:0xffaaaa})
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'proximal' , params );
+
+
+    var mesh = new THREE.Mesh(
+      boneGeo,
+      new THREE.MeshLambertMaterial({color:0xffaaaa})
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'metacarpal' , params );
+
+
+    console.log( riggedSkeleton );
+
+    var mesh = new THREE.Mesh(
+      skullGeo,
+      new THREE.MeshLambertMaterial({color:0xffaaaa})
+
+    );
+
+    mesh.scale.multiplyScalar( .03 );
+    mesh.rotation.x = -Math.PI/2;
+
+    riggedSkeleton.addFingerMesh( mesh , 'thumb' );
+    riggedSkeleton.addJointMesh( mesh , 'proximal' );
+   
+
+    riggedSkeletons.push( riggedSkeleton );
 
 
 
@@ -308,10 +408,39 @@ z-index: 999;
     riggedSkeleton.addScaledFingerMesh( mesh , 'ring' );
     riggedSkeleton.addScaledFingerMesh( mesh , 'pinky' );
 
+
+    var tNoise  = THREE.ImageUtils.loadTexture( 'noiseLookup.jpg' );
+    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup2.png' );
+    var tNormal = THREE.ImageUtils.loadTexture( 'img/normals/chesterfield.png' );
+    var uniforms = {
+
+      tReflection:{ type:"t" , value: tReflection },
+      tNoise:{ type:"t" , value: tNoise }, 
+      tIri:{ type:"t" , value: tIri },
+      lightPos: { type:"v3" , value: new THREE.Vector3( 0 , 1 , 0 ) },
+      tNormal:{type:"t",value:tNormal},
+      time:timer
+
+    }
+
+    var material = new THREE.ShaderMaterial({
+
+      uniforms: uniforms,
+      vertexShader: shaders.vertexShaders.iri,
+      fragmentShader: shaders.fragmentShaders.iri,
+      side: THREE.DoubleSide
+
+    });
+
+
+    var geo = new THREE.BoxGeometry( 20 , 20 , 20 , 20 , 20 , 20 );
+
+    var mesh = new THREE.Mesh( geo , material );
+
+
+
+    riggedSkeleton.addFingerMesh( mesh , 'thumb' );
     riggedSkeletons.push( riggedSkeleton );
-
-
-
 
 
     nextSkeleton();
@@ -361,6 +490,19 @@ z-index: 999;
 
   }
 
+  function onLoad(){
+
+
+    loaded ++;
+
+    if( loaded === neededToLoad ){
+
+      init();
+      animate();
+
+    }
+
+  }
 </script>
 
 
