@@ -34,14 +34,15 @@ z-index: 999;
   <a onclick="nextSkeleton()"> NEXT SKELETON </a>
 
 
-<script src = "leap.js"               ></script>
-<script src = "three.js"              ></script>
-<script src = "jquery.min.js"         ></script>
-<script src = "stats.min.js"          ></script>
-<script src = "RiggedSkeleton.js"     ></script>
-<script src = "TrackballControls.js"  ></script>
-<script src = "ShaderLoader.js"       ></script>
-<script src = "OBJLoader.js"       ></script>
+<script src = "lib/leap.js"               ></script>
+<script src = "lib/three.js"              ></script>
+<script src = "lib/jquery.min.js"         ></script>
+<script src = "lib/stats.min.js"          ></script>
+<script src = "lib/TrackballControls.js"  ></script>
+<script src = "lib/ShaderLoader.js"       ></script>
+<script src = "lib/OBJLoader.js"          ></script>
+
+<script src = "RiggedSkeleton.js"         ></script>
 
 
 <script>
@@ -67,27 +68,19 @@ z-index: 999;
 
 
   var loader  = new THREE.OBJLoader();
-  loader.load( 'bone.obj' , function( obj ){
+  loader.load( 'models/bone.obj' , function( obj ){
 
-      console.log('sdadsa');
-      console.log( obj );
-
-      boneGeo = obj.children[0].geometry//.geometry;
-      console.log( boneGeo );
-      onLoad();
-
+    boneGeo = obj.children[0].geometry//.geometry;
+    console.log( boneGeo );
+    onLoad();
 
   });
 
-  loader.load( 'skull1.obj' , function( obj ){
+  loader.load( 'models/skull1.obj' , function( obj ){
 
-      console.log('sdadsa');
-      console.log( obj );
-
-      skullGeo = obj.children[0].geometry//.geometry;
-      console.log( boneGeo );
-      onLoad();
-
+    skullGeo = obj.children[0].geometry//.geometry;
+    console.log( boneGeo );
+    onLoad();
 
   });
 
@@ -373,8 +366,8 @@ z-index: 999;
     var tReflection = THREE.ImageUtils.loadTextureCube( urls );
 
 
-    var tNoise  = THREE.ImageUtils.loadTexture( 'noiseLookup.jpg' );
-    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup1.png' );
+    var tNoise  = THREE.ImageUtils.loadTexture( 'img/noiseLookup.jpg' );
+    var tIri    = THREE.ImageUtils.loadTexture( 'img/iriLookup.png' );
     var tNormal = THREE.ImageUtils.loadTexture( 'img/normals/rock.jpg' );
     var uniforms = {
 
@@ -407,8 +400,8 @@ z-index: 999;
     riggedSkeleton.addScaledFingerMesh( mesh , 'pinky' );
 
 
-    var tNoise  = THREE.ImageUtils.loadTexture( 'noiseLookup.jpg' );
-    var tIri    = THREE.ImageUtils.loadTexture( 'iriLookup2.png' );
+    var tNoise  = THREE.ImageUtils.loadTexture( 'img/noiseLookup.jpg' );
+    var tIri    = THREE.ImageUtils.loadTexture( 'img/iriLookup.png' );
     var tNormal = THREE.ImageUtils.loadTexture( 'img/normals/chesterfield.png' );
     var uniforms = {
 

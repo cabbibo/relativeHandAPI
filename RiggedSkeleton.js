@@ -1,5 +1,4 @@
-  
-  function RiggedSkeleton( controller , params ){
+ function RiggedSkeleton( controller , params ){
 
     var params = params || {};
 
@@ -446,25 +445,71 @@
   
   }
 
-  RiggedSkeleton.prototype.update = function(){
+  RiggedSkeleton.prototype.update = function( type ){
 
     this.frame = this.controller.frame();
 
-    if( this.frame.hands[0] ){
+    var hand;
+
+    if( !type ){
+
+      type = 0;
+
+    }
+
+    if( typeof type == 'string' ){
+
+      if( this.frame.hands[1] ){
+
+        if( this.frame.hands[1].type === type ){
+      
+          hand = this.frame.hands[1];
+  
+        }
+
+      }
+
+      // If there are two of the same type of hand, override...
+      // sry ;)
+      if( this.frame.hands[0] ){
+
+        if( this.frame.hands[0].type === type ){
+      
+          hand = this.frame.hands[0];
+  
+        }
+
+      }
+
+    }else{
+
+      if( this.frame.hands[type] ){
+        hand = this.frame.hands[type];
+      }
+
+
+    }
+
+
+    if( hand ){
 
       //console.log( this.frame.hands[0]);
 
       // TODO: is this the best way to scale?
-      var frameHand       = this.frame.hands[0];
+      var frameHand       = hand;
       var frameFingers    = this.orderFingers( frameHand );
-  
+ 
       var pPalm           = frameHand.palmPosition;
-      var handPos         = this.leapToScene( pPalm , this.movementSize );
-      this.hand.position  = handPos;
+      this.leapToCamera( this.hand.position , camera, pPalm , this.movementSize );
       
       // Rotates our hand according to the proper basis
       this.handBasis    =  this.getHandBasis( frameHand );
       this.hand.rotation.setFromRotationMatrix( this.handBasis );
+
+
+      var mat3 = new THREE.Matrix3().getInverse( camera.matrix );
+      this.hand.matrix.multiply( mat3);
+      this.hand.updateMatrix();
 
       for( var i = 0; i < this.fingers.length; i++ ){
 
@@ -481,6 +526,10 @@
         this.updateFingerRig( frameHand ,  frameFinger , finger );
 
       }
+
+    }else{
+
+      this.hand.position.set( 10000000 , 0 , 0 );
 
     }
 
@@ -621,6 +670,18 @@
 
   }
 
+  RiggedSkeleton.prototype.leapToCamera = function( vector , camera , position , size ){
+
+    var v = this.leapToScene( position , size );
+
+    v.z -= size;
+    v.applyMatrix4( camera.matrix );
+
+    vector.copy( v );
+
+    return v;
+
+  }
 
   // Makes sure our fingers are properly ordered
   
