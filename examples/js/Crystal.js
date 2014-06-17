@@ -45,20 +45,17 @@ function Crystal( height , width , numOf ){
       var subPosXY1 = this.toCart( width / 2 , (j/6) * 2 * Math.PI );
       var subPosXY2 = this.toCart( width / 2 , ((j+1)/6) * 2 * Math.PI );
 
-      fPosX1 = posXY[0] + subPosXY1[0];
-      fPosY1 = posXY[1] + subPosXY1[1];
+      fPosX1 = posXY[0] + subPosXY1[0]*(Math.random()*.5 +.5);
+      fPosY1 = posXY[1] + subPosXY1[1]*(Math.random()*.5 +.5);
 
-      fPosX2 = posXY[0] + subPosXY2[0];
-      fPosY2 = posXY[1] + subPosXY2[1];
+      fPosX2 = posXY[0] + subPosXY2[0]*(Math.random()*.5 +.5);
+      fPosY2 = posXY[1] + subPosXY2[1]*(Math.random()*.5 +.5);
 
       var finalIndex = index + j * 6 * 3;
      
       var h1 = height/2;
       var h2 = (height/2) - newHeight;
-      
-      var h1 = -newHeight/2;
-      var h2 = newHeight/2;
-
+     
       positions[ finalIndex + 0  ] = fPosX1;
       positions[ finalIndex + 1  ] = fPosY1;
       positions[ finalIndex + 2  ] = h1;
@@ -95,7 +92,7 @@ function Crystal( height , width , numOf ){
 
 
 
-  var material = new THREE.MeshNormalMaterial({ color: 0xff0000 , side: THREE.DoubleSide });
+  var material = new THREE.MeshLambertMaterial({ color: 0xcccccc , side: THREE.DoubleSide });
   var mesh = new THREE.Mesh( geometry , material );
 
 

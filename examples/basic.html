@@ -70,7 +70,7 @@
     );
 
     // placing our camera position so it can see everything
-    camera.position.z = sceneSize ;
+    camera.position.z = sceneSize *4;
 
 
     controls = new THREE.TrackballControls( camera );
@@ -129,30 +129,35 @@
     
     controller.connect();
 
-    var crystal = new Crystal( 300 , 20 ,  50 );
+    var crystal = new Crystal( 300 , 15 ,  10 );
+    var crystal1 = new Crystal( 300 , 10 , 50 );
+    var crystal2 = new Crystal( 300 , 8 ,  100 );
+    var crystal3 = new Crystal( 300 , 5 ,  300 );
 
-    riggedSkeleton.addScaledJointMesh( crystal , 'intermediate' , {
-      //centered: false,
-      //length: 150
-    });
+    riggedSkeleton.addScaledJointMesh( crystal , 'intermediate' );
 
-    riggedSkeleton.addScaledJointMesh( crystal , 'distal' , {
-      //centered: false,
-      //length: 150
-    });
+    riggedSkeleton.addScaledJointMesh( crystal1 , 'distal' );
 
-    riggedSkeleton.addScaledJointMesh( crystal , 'proximal' , {
-      //centered: false,
-      //length: 150
-    });
+    riggedSkeleton.addScaledJointMesh( crystal2 , 'proximal' );
 
-    riggedSkeleton.addScaledJointMesh( crystal , 'metacarpal' , {
-      //centered: false,
-      //length: 150
-    });
-    
+    riggedSkeleton.addScaledJointMesh( crystal3 , 'metacarpal' );
+
+
+    crystal.rotation.x = Math.PI/2;
+    crystal1.rotation.x = Math.PI/2;
+    crystal2.rotation.x = Math.PI/2;
+    crystal3.rotation.x = Math.PI/2;
     
 
+    scene.add( crystal );
+    scene.add( crystal1 );
+    scene.add( crystal2 );
+    scene.add( crystal3 );
+
+    crystal.position.x = -100;
+    crystal1.position.x = -30;
+    crystal2.position.x = 50;
+    crystal3.position.x = 100;
     //scene.add( crystal );
 
   }
