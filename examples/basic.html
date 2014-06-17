@@ -27,15 +27,17 @@
 <body>
 
   
-<script src = "../lib/leap.js"               ></script>
-<script src = "../lib/three.js"              ></script>
-<script src = "../lib/jquery.min.js"         ></script>
-<script src = "../lib/stats.min.js"          ></script>
-<script src = "../lib/TrackballControls.js"  ></script>
-<script src = "../lib/ShaderLoader.js"       ></script>
-<script src = "../lib/OBJLoader.js"          ></script>
+<script src = "../lib/leap.js"                ></script>
+<script src = "../lib/three.js"               ></script>
+<script src = "../lib/jquery.min.js"          ></script>
+<script src = "../lib/stats.min.js"           ></script>
+<script src = "../lib/TrackballControls.js"   ></script>
+<script src = "../lib/ShaderLoader.js"        ></script>
+<script src = "../lib/OBJLoader.js"           ></script>
 
-<script src = "../RiggedSkeleton.js"         ></script>
+<script src = "../RiggedSkeleton.js"          ></script>
+
+<script src = "js/Crystal.js"                 ></script>
 
 
 <script>
@@ -122,12 +124,36 @@
       new THREE.MeshLambertMaterial({color:0xcc9999})
     );
 
-    riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+    //riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
     riggedSkeleton.addToScene( scene );
     
     controller.connect();
 
-    console.log( 'ashannnn' );
+    var crystal = new Crystal( 300 , 20 ,  50 );
+
+    riggedSkeleton.addScaledJointMesh( crystal , 'intermediate' , {
+      //centered: false,
+      //length: 150
+    });
+
+    riggedSkeleton.addScaledJointMesh( crystal , 'distal' , {
+      //centered: false,
+      //length: 150
+    });
+
+    riggedSkeleton.addScaledJointMesh( crystal , 'proximal' , {
+      //centered: false,
+      //length: 150
+    });
+
+    riggedSkeleton.addScaledJointMesh( crystal , 'metacarpal' , {
+      //centered: false,
+      //length: 150
+    });
+    
+    
+
+    scene.add( crystal );
 
   }
 
