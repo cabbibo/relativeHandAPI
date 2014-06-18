@@ -1,4 +1,5 @@
 
+
 <html>
 
 <head>
@@ -34,10 +35,12 @@
 <script src = "../lib/TrackballControls.js"   ></script>
 <script src = "../lib/ShaderLoader.js"        ></script>
 <script src = "../lib/OBJLoader.js"           ></script>
+<script src = "../lib/ObjectControls.js"      ></script>
 
 <script src = "../RiggedSkeleton.js"          ></script>
 
 <script src = "js/Crystal.js"                 ></script>
+<script src = "js/Mirror.js"                 ></script>
 
 
 <script>
@@ -70,7 +73,138 @@
     );
 
     // placing our camera position so it can see everything
-    camera.position.z = sceneSize *4;
+    camera.position.z = sceneSize *9;
+
+     riggedSkeleton = new RiggedSkeleton( controller , {
+
+      movementSize: 500,
+      handSize: 100
+      
+    });
+
+
+    //riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+    riggedSkeleton.addToScene( scene );
+
+    var handMesh = new THREE.Mesh(
+      new THREE.BoxGeometry( 10 , 10 , 100 ),
+      new THREE.MeshPhongMaterial({color:0xffffff})
+    );
+
+    riggedSkeleton.addScaledJointMesh( handMesh , 'intermediate' );
+    riggedSkeleton.addScaledJointMesh( handMesh , 'distal' );
+    riggedSkeleton.addScaledJointMesh( handMesh , 'proximal' );
+    riggedSkeleton.addScaledJointMesh( handMesh , 'metacarpal' );
+
+    riggedSkeleton1 = new RiggedSkeleton( controller , {
+
+      movementSize: 500,
+      handSize: 100
+      
+    });
+
+
+    //riggedSkeleton1.addScaledJointMesh( mesh , 'distal' );
+    riggedSkeleton1.addToScene( scene );
+
+    var handMesh = new THREE.Mesh(
+      new THREE.BoxGeometry( 10 , 10 , 100 ),
+      new THREE.MeshPhongMaterial({color:0xffffff})
+    );
+
+    riggedSkeleton1.addScaledJointMesh( handMesh , 'intermediate' );
+    riggedSkeleton1.addScaledJointMesh( handMesh , 'distal' );
+    riggedSkeleton1.addScaledJointMesh( handMesh , 'proximal' );
+    riggedSkeleton1.addScaledJointMesh( handMesh , 'metacarpal' );
+
+
+
+    objectControls = new ObjectControls( camera,  riggedSkeleton.hand , riggedSkeleton1.hand ,controller );
+    
+
+    cubeCamera = new THREE.CubeCamera(1, 1000, 256); // parameters: near, far, resolution
+    cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter; // mipmap filter
+
+    scene.add(cubeCamera);
+
+    // create a mesh with cubeCamera.renderTarget as a value of envMap
+    sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(20, 30, 15),
+      new THREE.MeshBasicMaterial({
+        envMap: cubeCamera.renderTarget,
+      })
+    );
+
+    cubeCamera.position = sphere.position;
+
+    objectControls.add( sphere );
+
+    scene.add( sphere );
+    sphere.position.x = -200;
+    sphere.position.y = -50;
+
+    
+    var light = new THREE.PointLight( 0xffcc66 , 2 , 300 );
+    scene.add( light );
+
+    light.position = sphere.position;
+
+
+
+    cubeCamera1 = new THREE.CubeCamera(1, 1000, 256); // parameters: near, far, resolution
+    cubeCamera1.renderTarget.minFilter = THREE.LinearMipMapLinearFilter; // mipmap filter
+
+    scene.add(cubeCamera1);
+
+    // create a mesh with cubeCamera.renderTarget as a value of envMap
+    sphere1 = new THREE.Mesh(
+      new THREE.SphereGeometry(20, 30, 15),
+      new THREE.MeshBasicMaterial({
+        envMap: cubeCamera1.renderTarget,
+      })
+    );
+
+    cubeCamera1.position = sphere1.position;
+
+
+    objectControls.add( sphere1 );
+    scene.add( sphere1 );
+    sphere1.position.y = -50;
+
+
+    var light1 = new THREE.PointLight( 0x66ffcc , 2 , 300);
+    scene.add( light1 );
+
+    light1.position = sphere1.position;
+
+
+
+    cubeCamera2 = new THREE.CubeCamera(1, 1000, 256); // parameters: near, far, resolution
+    cubeCamera2.renderTarget.minFilter = THREE.LinearMipMapLinearFilter; // mipmap filter
+
+    scene.add(cubeCamera2);
+
+    // create a mesh with cubeCamera.renderTarget as a value of envMap
+    sphere2 = new THREE.Mesh(
+      new THREE.SphereGeometry(20, 30, 15),
+      new THREE.MeshBasicMaterial({
+        envMap: cubeCamera2.renderTarget,
+      })
+    );
+
+
+    cubeCamera2.position = sphere2.position;
+    objectControls.add( sphere2 );
+    scene.add( sphere2 );
+    sphere2.position.x = 200;
+    sphere2.position.y = -50;
+
+    var light2 = new THREE.PointLight( 0xff66cc , 2 , 300 );
+    scene.add( light2 );
+
+    light2.position = sphere2.position;
+
+          
 
 
     controls = new THREE.TrackballControls( camera );
@@ -89,7 +223,7 @@
 
 
     // Setting up our Renderer
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({antialias:true});
 
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild( renderer.domElement );
@@ -98,66 +232,118 @@
     // Making sure our renderer is always the right size
     window.addEventListener( 'resize', onWindowResize , false );
 
-    var light = new THREE.DirectionalLight( 0xaaaaff , 1);
-    light.position.set( 0 , 0 , 1 );
-    scene.add( light );
 
-     var light = new THREE.DirectionalLight( 0xffaaaa , 1);
-    light.position.set( 0 , 1 , 0 );
-    scene.add( light );
-
-
-     var light = new THREE.DirectionalLight( 0xaaffaa , 1);
-    light.position.set( 1 , 0 , 0 );
-    scene.add( light );
-
-
-    riggedSkeleton = new RiggedSkeleton( controller , {
-
-      movementSize: 500,
-      handSize: 100
-      
-    });
-
-    var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 30 , 30  , 100 ),
-      new THREE.MeshLambertMaterial({color:0xcc9999})
-    );
-
-    //riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
-    riggedSkeleton.addToScene( scene );
     
     controller.connect();
 
-    var crystal = new Crystal( 300 , 15 ,  10 );
-    var crystal1 = new Crystal( 300 , 10 , 50 );
-    var crystal2 = new Crystal( 300 , 8 ,  100 );
-    var crystal3 = new Crystal( 300 , 5 ,  300 );
-
-    riggedSkeleton.addScaledJointMesh( crystal , 'intermediate' );
-
-    riggedSkeleton.addScaledJointMesh( crystal1 , 'distal' );
-
-    riggedSkeleton.addScaledJointMesh( crystal2 , 'proximal' );
-
-    riggedSkeleton.addScaledJointMesh( crystal3 , 'metacarpal' );
-
+    crystal = new Crystal( 100 , 15 ,  100 );
 
     crystal.rotation.x = Math.PI/2;
-    crystal1.rotation.x = Math.PI/2;
-    crystal2.rotation.x = Math.PI/2;
-    crystal3.rotation.x = Math.PI/2;
-    
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+    scene.add( crystal );
+
+
+    crystal = new Crystal( 100 , 15 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
 
     scene.add( crystal );
-    scene.add( crystal1 );
-    scene.add( crystal2 );
-    scene.add( crystal3 );
 
-    crystal.position.x = -100;
-    crystal1.position.x = -30;
-    crystal2.position.x = 50;
-    crystal3.position.x = 100;
+     crystal = new Crystal( 100 , 15 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+
+     crystal = new Crystal( 100 , 15 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+
+     crystal = new Crystal( 100 , 15 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+
+    crystal = new Crystal( 100 , 60 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+    crystal = new Crystal( 400 , 15 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+    crystal = new Crystal( 40 , 150 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+    crystal = new Crystal( 80 , 100 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal );
+
+    crystal = new Crystal( 200 , 15 ,  100 );
+
+    crystal.rotation.x = Math.PI/2;
+    crystal.position.z = (Math.random()-.5) * 300;
+    crystal.position.x = (Math.random()-.5) * 300;
+    crystal.position.y = -201;
+
+    scene.add( crystal )
+
+
+    
+
+
+    groundMirror = new THREE.Mirror( renderer, camera, { clipBias: 0.003, textureWidth: window.innerWidth, textureHeight: window.innerHeight, color: 0x777777 } );
+		
+	var planeGeo = new THREE.PlaneGeometry( 3000, 3000, 100 , 100 );
+
+    mirrorMesh = new THREE.Mesh( planeGeo, groundMirror.material );
+    mirrorMesh.add( groundMirror );
+    mirrorMesh.rotateX( -Math.PI / 2 );
+    scene.add( mirrorMesh );
+    mirrorMesh.position.y = -190;
+
+
     //scene.add( crystal );
 
   }
@@ -165,13 +351,35 @@
   function animate(){
 
     controls.update();
-    riggedSkeleton.update();
+    riggedSkeleton.update(0);
+    riggedSkeleton1.update(1);
 
     stats.update();
 
+    //dT.value = clock.getDelta();
+    //timer.value += dT.value;
+
+
+    objectControls.update();
+    
+    sphere.visible = false;
+    cubeCamera.updateCubeMap(renderer, scene);
+    sphere.visible = true;
+
+    sphere1.visible = false;
+    cubeCamera1.updateCubeMap(renderer, scene);
+    sphere1.visible = true;
+
+    sphere2.visible = false;
+    cubeCamera2.updateCubeMap(renderer, scene);
+    sphere2.visible = true;
+
+    groundMirror.render();
     renderer.render( scene , camera );
 
-    requestAnimationFrame( animate );
+
+
+       requestAnimationFrame( animate );
 
   }
 
