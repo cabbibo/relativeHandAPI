@@ -501,15 +501,33 @@
  
       var pPalm           = frameHand.palmPosition;
       this.leapToCamera( this.hand.position , camera, pPalm , this.movementSize );
-      
+     
+      //this.hand.position.set( 0 , 0 , 0 );
+
+     // console.log(this.hand.matrix.elements[0]);
+      //this.hand.matrix.multiply( mat3 );
+      //console.log(this.hand.matrix.elements[0]);
+      //this.hand.updateMatrix();
+
       // Rotates our hand according to the proper basis
       this.handBasis    =  this.getHandBasis( frameHand );
+   
+      //camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+  
+      camera.matrixWorldInverse.needsUpdate = true;
+      var camMat = new THREE.Matrix4().extractRotation( camera.matrix);
+          //console.log( this.handBasis.elements[1] );
+      
+      this.handBasis.multiply( camMat.clone().transpose() );
+
+
       this.hand.rotation.setFromRotationMatrix( this.handBasis );
 
-
-      var mat3 = new THREE.Matrix3().getInverse( camera.matrix );
-      this.hand.matrix.multiply( mat3);
-      this.hand.updateMatrix();
+      /*var mat3 = new THREE.Matrix3().getInverse( camera.matrix );
+      console.log(this.hand.matrix.elements[0]);
+      this.hand.matrix.multiply( mat3 );
+      console.log(this.hand.matrix.elements[0]);
+      this.hand.updateMatrix();*/
 
       for( var i = 0; i < this.fingers.length; i++ ){
 

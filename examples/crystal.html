@@ -29,9 +29,15 @@
   
 <script src = "../lib/leap.js"                ></script>
 <script src = "../lib/three.js"               ></script>
+<script src = "../lib/jquery.min.js"          ></script>
 <script src = "../lib/stats.min.js"           ></script>
+<script src = "../lib/TrackballControls.js"   ></script>
+<script src = "../lib/ShaderLoader.js"        ></script>
+<script src = "../lib/OBJLoader.js"           ></script>
 
 <script src = "../RiggedSkeleton.js"          ></script>
+
+<script src = "js/Crystal.js"                 ></script>
 
 
 <script>
@@ -67,6 +73,8 @@
     camera.position.z = sceneSize *4;
 
 
+    controls = new THREE.TrackballControls( camera );
+
     // Getting the container in the right location
     container     = document.createElement( 'div' );
     container.id  = 'container';
@@ -90,13 +98,6 @@
     // Making sure our renderer is always the right size
     window.addEventListener( 'resize', onWindowResize , false );
 
-    
-    /*
-
-      Lights
-
-    */
-
     var light = new THREE.DirectionalLight( 0xaaaaff , 1);
     light.position.set( 0 , 0 , 1 );
     scene.add( light );
@@ -110,11 +111,7 @@
     light.position.set( 1 , 0 , 0 );
     scene.add( light );
 
-    /*
 
-      Skeleton
-
-    */
     riggedSkeleton = new RiggedSkeleton( controller , {
 
       movementSize: 500,
@@ -122,25 +119,52 @@
       
     });
 
-    riggedSkeleton.addToScene( scene );
-    
     var mesh = new THREE.Mesh(
       new THREE.BoxGeometry( 30 , 30  , 100 ),
       new THREE.MeshLambertMaterial({color:0xcc9999})
     );
 
-    riggedSkeleton.addScaledJointMesh( mesh , 'metacarpal' );
-    riggedSkeleton.addScaledJointMesh( mesh , 'proximal' );
-    riggedSkeleton.addScaledJointMesh( mesh , 'intermediate' );
-    riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
-
+    //riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+    riggedSkeleton.addToScene( scene );
     
     controller.connect();
-  
+
+    var crystal = new Crystal( 300 , 15 ,  10 );
+    var crystal1 = new Crystal( 300 , 10 , 50 );
+    var crystal2 = new Crystal( 300 , 8 ,  100 );
+    var crystal3 = new Crystal( 300 , 5 ,  300 );
+
+    riggedSkeleton.addScaledJointMesh( crystal , 'intermediate' );
+
+    riggedSkeleton.addScaledJointMesh( crystal1 , 'distal' );
+
+    riggedSkeleton.addScaledJointMesh( crystal2 , 'proximal' );
+
+    riggedSkeleton.addScaledJointMesh( crystal3 , 'metacarpal' );
+
+
+    crystal.rotation.x = Math.PI/2;
+    crystal1.rotation.x = Math.PI/2;
+    crystal2.rotation.x = Math.PI/2;
+    crystal3.rotation.x = Math.PI/2;
+    
+
+    scene.add( crystal );
+    scene.add( crystal1 );
+    scene.add( crystal2 );
+    scene.add( crystal3 );
+
+    crystal.position.x = -100;
+    crystal1.position.x = -30;
+    crystal2.position.x = 50;
+    crystal3.position.x = 100;
+    //scene.add( crystal );
+
   }
 
   function animate(){
 
+    controls.update();
     riggedSkeleton.update();
 
     stats.update();

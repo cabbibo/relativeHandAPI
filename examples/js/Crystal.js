@@ -81,8 +81,6 @@ function Crystal( height , width , numOf ){
       positions[ finalIndex + 17 ] = h2;
 
     }
-    
-
 
   }
 
