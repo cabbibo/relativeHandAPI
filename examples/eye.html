@@ -32,15 +32,18 @@ z-index: 999;
 <body>
 
 
-<script src = "../lib/leap.js"               ></script>
-<script src = "../lib/three.js"              ></script>
-<script src = "../lib/jquery.min.js"         ></script>
-<script src = "../lib/stats.min.js"          ></script>
-<script src = "../lib/TrackballControls.js"  ></script>
-<script src = "../lib/ShaderLoader.js"       ></script>
-<script src = "../lib/OBJLoader.js"          ></script>
+<script src = "../lib/leap.js"                ></script>
+<script src = "../lib/three.js"               ></script>
+<script src = "../lib/jquery.min.js"          ></script>
+<script src = "../lib/stats.min.js"           ></script>
+<script src = "../lib/TrackballControls.js"   ></script>
+<script src = "../lib/ShaderLoader.js"        ></script>
+<script src = "../lib/OBJLoader.js"           ></script>
+<script src = "../lib/Stream.js"              ></script>
+<script src = "../lib/AudioController.js"     ></script>
+<script src = "../lib/AudioTexture.js"        ></script>
 
-<script src = "../RiggedSkeleton.js"         ></script>
+<script src = "../RiggedSkeleton.js"          ></script>
 
 
 <script>
@@ -62,6 +65,12 @@ z-index: 999;
 
 
   var clock = new THREE.Clock();
+
+
+  var audioController = new AudioController();
+
+  var stream = new Stream(  '../audio/you.mp3',audioController  );
+
 
   var loader  = new THREE.OBJLoader();
   loader.load( '../models/bone.obj' , function( obj ){
@@ -224,10 +233,10 @@ z-index: 999;
 
     var tLookup = THREE.ImageUtils.loadTexture( '../img/iriLookup.png' );
 
-    var color1 = new THREE.Vector3( 1. , 0. , 0. );
-    var color2 = new THREE.Vector3( 0. , 0. , 1. );
-    var color3 = new THREE.Vector3( 1. , 0 , 0. );
-    var color4 = new THREE.Vector3( 0. , 1. , 0. );
+    var color1 = new THREE.Vector3( 1. , 0. , 1. );
+    var color2 = new THREE.Vector3( 1. , 1. , 5. );
+    var color3 = new THREE.Vector3( 0. , 3 , 0. );
+    var color4 = new THREE.Vector3( 1. , 1. , 1. );
 
     
     var uniforms = {
@@ -235,7 +244,8 @@ z-index: 999;
       lightPos: { type:"v3" , value: new THREE.Vector3(100,0,0)},
       tNormal:{type:"t",value:tNormal},
       time:timer,
-      t_audio:{ type:"t" , value: tLookup },
+      tLookup:{ type:"t" , value: tLookup },
+      t_audio:{ type:"t" , value: audioController.texture },
       color1:{ type:"v3" , value: color1 },
       color2:{ type:"v3" , value: color2 },
       color3:{ type:"v3" , value: color3 },
@@ -271,6 +281,7 @@ z-index: 999;
 
   function animate(){
 
+    audioController.update();
     timer.value += clock.getDelta();
 
     controls.update();
@@ -317,6 +328,7 @@ z-index: 999;
 
       init();
       animate();
+      stream.play();
 
     }
 

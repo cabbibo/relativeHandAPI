@@ -3,6 +3,7 @@ uniform vec3 lightPos;
 uniform float time;
 uniform sampler2D tNormal;
 uniform sampler2D t_audio;
+uniform sampler2D tLookup;
 
 uniform vec3 color1;
 uniform vec3 color2;
@@ -18,8 +19,8 @@ varying vec3 vLightPos;
 varying vec3 vView;
 varying vec3 vMVPos;
 
-const float texScale =.5;
-const float normalScale =.5;
+const float texScale =1.5;
+const float normalScale =.05;
 
 $simplex
 
@@ -118,17 +119,23 @@ void main(){
 
   total = (cos(total) + 1.)/2.;
 
-  vec3 lookup_table_color = cubicCurve( inverse_dot_view * facingRatio, c1 , c2 , c3 , c4 );
+  vec3 lookup = cubicCurve( inverse_dot_view * facingRatio, c1 , c2 , c3 , c4 );
 
 
+ // vec3 lookup = texture2D( tLookup , vec2( inverse_dot_view * facingRatio,0. )).xyz;
+  
   vec3 aColor = texture2D( t_audio , vec2( inverse_dot_view * facingRatio,0. )).xyz;
 
  // float noise = snoise( normalize(vPos) );
 
   vec3 facing = aColor * facingRatio*facingRatio*facingRatio;
-  vec3 nonFacing =  lookup_table_color * (1.-facingRatio)*(1.-facingRatio)*(1.-facingRatio);
+  vec3 nonFacing =  lookup * (1.-facingRatio)* (1.-facingRatio)* (1.-facingRatio);
+ // vec3 nonFacing =  lookup_table_color * (1.-facingRatio);
+
+
+
   //vec3 norm = ((finalNormal * .3 + .7) * facingRatio)*.1;
-  vec3 norm = ((finalNormal * .3 + .7) * (1.-facingRatio))*.5;
+  vec3 norm = vec3(abs(finalNormal.x));
   gl_FragColor = vec4( facing + nonFacing, 1.0 );
   //gl_FragColor = vec4(  normalTex , 1.0 );
 
