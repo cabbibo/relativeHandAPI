@@ -19,8 +19,8 @@ varying vec3 vLightPos;
 varying vec3 vView;
 varying vec3 vMVPos;
 
-const float texScale =1.5;
-const float normalScale =.05;
+const float texScale =.5;
+const float normalScale =.5;
 
 $simplex
 
@@ -128,7 +128,7 @@ void main(){
 
  // float noise = snoise( normalize(vPos) );
 
-  vec3 facing = aColor * facingRatio*facingRatio*facingRatio;
+  vec3 facing = aColor; //* facingRatio*facingRatio*facingRatio;
   vec3 nonFacing =  lookup * (1.-facingRatio)* (1.-facingRatio)* (1.-facingRatio);
  // vec3 nonFacing =  lookup_table_color * (1.-facingRatio);
 
@@ -136,7 +136,7 @@ void main(){
 
   //vec3 norm = ((finalNormal * .3 + .7) * facingRatio)*.1;
   vec3 norm = vec3(abs(finalNormal.x));
-  gl_FragColor = vec4( facing + nonFacing, 1.0 );
+  gl_FragColor = vec4( lookup * facing, 1.0 );
   //gl_FragColor = vec4(  normalTex , 1.0 );
 
 }

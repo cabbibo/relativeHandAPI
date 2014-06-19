@@ -55,7 +55,7 @@ z-index: 999;
   var frame, controller;
 
   // Setting up how big we want the scene to be
-  var sceneSize = 1000;
+  var sceneSize = 3000;
 
   var skullGeo;
   var boneGeo;
@@ -73,11 +73,14 @@ z-index: 999;
 
 
   var loader  = new THREE.OBJLoader();
-  loader.load( '../models/bone.obj' , function( obj ){
+  loader.load( '../models/totem_6.obj' , function( obj ){
 
     boneGeo = obj.children[0].geometry//.geometry;
     console.log( boneGeo );
     onLoad();
+
+    boneGeo.computeFaceNormals();
+    boneGeo.computeVertexNormals();
 
   });
 
@@ -86,7 +89,7 @@ z-index: 999;
   //totem_6.obj
   //skull1.obj
 
-  loader.load( '../models/Eye_ship_50k_tris.OBJ ' , function( obj ){
+  loader.load( '../models/Eye_ship_50k_tris.OBJ' , function( obj ){
 
     console.log( obj );
     skullGeo = obj.children[0].geometry//.geometry;
@@ -177,7 +180,7 @@ z-index: 999;
         new THREE.MeshLambertMaterial({color:0xffaaaa, side: THREE.DoubleSide})
     );
 
-    skybox.scale.multiplyScalar( 50.5 );
+    skybox.scale.multiplyScalar( 5.5 );
 
 
    //scene.add( skybox );
@@ -233,10 +236,10 @@ z-index: 999;
 
     var tLookup = THREE.ImageUtils.loadTexture( '../img/iriLookup.png' );
 
-    var color1 = new THREE.Vector3( 1. , 0. , 1. );
-    var color2 = new THREE.Vector3( 1. , 1. , 5. );
+    var color1 = new THREE.Vector3( 3. , .4 , 1. );
+    var color2 = new THREE.Vector3( .5 , 1. , 5. );
     var color3 = new THREE.Vector3( 0. , 3 , 0. );
-    var color4 = new THREE.Vector3( 1. , 1. , 1. );
+    var color4 = new THREE.Vector3( 1. , 1. , 4. );
 
     
     var uniforms = {
@@ -255,7 +258,7 @@ z-index: 999;
 
 
 
-    vertexShader   = shaders.vertexShaders.planet;
+  vertexShader   = shaders.vertexShaders.planet;
   fragmentShader = shaders.fragmentShaders.planet;
 
   material = new THREE.ShaderMaterial({
@@ -266,12 +269,77 @@ z-index: 999;
 
   });
 
-  geometry = new THREE.IcosahedronGeometry( 100 , 5 );
-
   mesh = new THREE.Mesh( skullGeo , material );
-
-  mesh.scale.multiplyScalar( 50.5 );
   scene.add( mesh );
+
+  mesh.scale.multiplyScalar( 400.2 );
+  mesh.rotation.y = Math.PI/2
+  mesh.position.z = 400;
+
+  
+
+  var color1 = new THREE.Vector3( 1. , 1. , .3 );
+  var color2 = new THREE.Vector3( 5. , 2. , 0 );
+  var color3 = new THREE.Vector3( 1. , .4 , 0. );
+  var color4 = new THREE.Vector3( 0. , 1. , 6. );
+
+  
+  var uniforms = {
+
+    lightPos: { type:"v3" , value: new THREE.Vector3(100,0,0)},
+    tNormal:{type:"t",value:tNormal},
+    time:timer,
+    tLookup:{ type:"t" , value: tLookup },
+    t_audio:{ type:"t" , value: audioController.texture },
+    color1:{ type:"v3" , value: color1 },
+    color2:{ type:"v3" , value: color2 },
+    color3:{ type:"v3" , value: color3 },
+    color4:{ type:"v3" , value: color4 },
+
+  }
+
+
+
+  vertexShader   = shaders.vertexShaders.planet;
+  fragmentShader = shaders.fragmentShaders.planet;
+
+  material = new THREE.ShaderMaterial({
+
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragmentShader
+
+  });
+
+
+  mesh = new THREE.Mesh( boneGeo , material );
+
+  mesh.scale.multiplyScalar( 60.5 );
+  
+
+  meshes=[];
+  for( var i = 0; i < 10; i++ ){
+
+    var t = i /10;
+
+    var x = 1000 * Math.cos( t * 2 * Math.PI );
+    var y = 1000 * Math.sin( t * 2 * Math.PI );
+
+    var m = mesh.clone();
+    m.position.x = x;
+    m.position.y = y;
+  //  m.rotation.y = Math.PI / 2;
+    m.rotation.z = ( t * Math.PI * 2 ) - Math.PI / 2;
+
+    scene.add( m );
+
+    meshes.push( m );
+
+
+  }
+
+ 
+  //scene.add( mesh );
 
     controller.connect();
 
@@ -292,6 +360,15 @@ z-index: 999;
     renderer.render( scene , camera );
 
     requestAnimationFrame( animate );
+
+    for( var i = 0; i < meshes.length; i++ ){
+
+      //meshes[i].rotation.x += .006;
+      //meshes[i].rotation.y += .009;
+     // meshes[i].rotation.z += .004;
+
+
+    }
 
   }
 
