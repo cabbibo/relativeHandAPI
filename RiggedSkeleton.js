@@ -183,9 +183,6 @@
     newObject.direction   = direction; 
     newObject.centered    = centered;
 
-//    newObject.position.z = -length;
-    
-
     for( var i = 0; i < this.fingers.length; i++ ){
 
       if( this.fingers[i].type === fingerType ){
@@ -352,6 +349,8 @@
     // and apply the palms rotation to that position
     //
 
+     // Saving our hand matrix for easy access
+    var hMatrix = this.hand.matrix;
 
     var metaPos = this.threeDif( frameHand.palmPosition , m.prevJoint );
     metaPos.multiplyScalar( this.scaledSize );
@@ -359,7 +358,7 @@
     ourFinger.metacarpal.position = metaPos;//this.threeDif( frameHand.palmPosition , m.prevJoint );
 
     var quat = new THREE.Quaternion();
-    quat.setFromRotationMatrix( this.hand.matrix.clone().transpose() );
+    quat.setFromRotationMatrix( hMatrix.clone().transpose() );
     
     ourFinger.metacarpal.position.applyQuaternion( quat ); 
 
@@ -383,10 +382,6 @@
     this.updateScaledMeshes( ourFinger.distal       );
     this.updateScaledMeshes( ourFinger.tip          );
 
-    // Saving our hand matrix for easy access
-    var hMatrix = this.hand.matrix;
-
-
     /*
      
       To rotate each finger properly, 
@@ -399,11 +394,10 @@
 
     */
 
-
     // METACARPAL ROTATION
     
     var mMatrix = this.matrixFromBasis( m.basis , frameHand.type );
-    
+
     var mRelRot = new THREE.Matrix4();
     mRelRot.multiplyMatrices( hMatrix.clone().transpose() , mMatrix );
     
@@ -413,7 +407,7 @@
     // PROXIMAL ROTATION
     
     var pMatrix = this.matrixFromBasis( p.basis , frameHand.type );
-    
+
     var pRelRot = new THREE.Matrix4();
     pRelRot.multiplyMatrices( mMatrix.clone().transpose() , pMatrix );
     
@@ -502,32 +496,10 @@
       var pPalm           = frameHand.palmPosition;
       this.leapToCamera( this.hand.position , camera, pPalm , this.movementSize );
      
-      //this.hand.position.set( 0 , 0 , 0 );
 
-     // console.log(this.hand.matrix.elements[0]);
-      //this.hand.matrix.multiply( mat3 );
-      //console.log(this.hand.matrix.elements[0]);
-      //this.hand.updateMatrix();
+      this.cameraInverse = new THREE.Matrix4().extractRotation( camera.matrixWorldInverse);
 
-      // Rotates our hand according to the proper basis
-      this.handBasis    =  this.getHandBasis( frameHand );
-   
-      //camera.matrixWorldInverse.getInverse( camera.matrixWorld );
-  
-      camera.matrixWorldInverse.needsUpdate = true;
-      var camMat = new THREE.Matrix4().extractRotation( camera.matrix);
-          //console.log( this.handBasis.elements[1] );
-      
-      this.handBasis.multiply( camMat.clone().transpose() );
-
-
-      this.hand.rotation.setFromRotationMatrix( this.handBasis );
-
-      /*var mat3 = new THREE.Matrix3().getInverse( camera.matrix );
-      console.log(this.hand.matrix.elements[0]);
-      this.hand.matrix.multiply( mat3 );
-      console.log(this.hand.matrix.elements[0]);
-      this.hand.updateMatrix();*/
+      this.hand.matrix.multiply( this.cameraInverse );
 
       for( var i = 0; i < this.fingers.length; i++ ){
 

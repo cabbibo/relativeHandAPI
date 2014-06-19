@@ -36,6 +36,8 @@
 <script src = "../lib/ShaderLoader.js"        ></script>
 <script src = "../lib/OBJLoader.js"           ></script>
 <script src = "../lib/ObjectControls.js"      ></script>
+<script src = "../lib/OculusRiftEffect.js"      ></script>
+<script src = "../lib/OculusBridge.min.js"      ></script>
 
 <script src = "../RiggedSkeleton.js"          ></script>
 
@@ -81,14 +83,62 @@
       handSize: 100
       
     });
+    
+    /*
+    
+       OCULUS
+       
+    var bridge = new OculusBridge({
+      "onOrientationUpdate" : function(quatValues) {
+        console.log('asba');  
+      camera.quaternion.set(quatValues.x, quatValues.y, quatValues.z, quatValues.w);
+      }
+    });
 
+    bridge.connect();
+
+         // Here is the effect for the Oculus Rift
+    // worldScale 100 means that 100 Units == 1m
+    effect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+    effect.setSize( window.innerWidth, window.innerHeight );
+
+    */
+         
+    controls = new THREE.TrackballControls( camera );
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer({antialias:true});
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+
+
+    
+    controller.connect();
 
     //riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
     riggedSkeleton.addToScene( scene );
 
     var handMesh = new THREE.Mesh(
       new THREE.BoxGeometry( 10 , 10 , 100 ),
-      new THREE.MeshPhongMaterial({color:0xffffff})
+      new THREE.MeshBasicMaterial({color:0xff0000})
     );
 
     riggedSkeleton.addScaledJointMesh( handMesh , 'intermediate' );
@@ -207,34 +257,6 @@
           
 
 
-    controls = new THREE.TrackballControls( camera );
-
-    // Getting the container in the right location
-    container     = document.createElement( 'div' );
-    container.id  = 'container';
-    
-    document.body.appendChild( container );
-
-
-    // Getting the stats in the right position
-    stats = new Stats();
-    stats.domElement.id = 'stats';
-    document.body.appendChild( stats.domElement );
-
-
-    // Setting up our Renderer
-    renderer = new THREE.WebGLRenderer({antialias:true});
-
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    container.appendChild( renderer.domElement );
-
-
-    // Making sure our renderer is always the right size
-    window.addEventListener( 'resize', onWindowResize , false );
-
-
-    
-    controller.connect();
 
     crystal = new Crystal( 100 , 15 ,  100 );
 
@@ -350,7 +372,7 @@
 
   function animate(){
 
-    controls.update();
+    //controls.update();
     riggedSkeleton.update(0);
     riggedSkeleton1.update(1);
 
@@ -377,9 +399,13 @@
     groundMirror.render();
     renderer.render( scene , camera );
 
+    /*
+    OCULUS   
+    effect.render( scene, camera );
+    */
 
-
-       requestAnimationFrame( animate );
+  
+    requestAnimationFrame( animate );
 
   }
 
@@ -388,6 +414,8 @@
 
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    effect.setSize( window.innerWidth, window.innerHeight );
+
 
     renderer.setSize( window.innerWidth, window.innerHeight );
 
