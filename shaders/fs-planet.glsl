@@ -19,8 +19,8 @@ varying vec3 vLightPos;
 varying vec3 vView;
 varying vec3 vMVPos;
 
-const float texScale =.5;
-const float normalScale =.5;
+const float texScale =1.;
+const float normalScale =.1;
 
 $simplex
 
@@ -74,6 +74,7 @@ void main(){
   normalTex.y *= -1.;
   normalTex = normalize( normalTex );
   mat3 tsb = mat3( normalize( blended_tangent ), normalize( cross( vNorm, blended_tangent ) ), normalize( vNorm ) );
+  
   vec3 finalNormal = tsb * normalTex;
 
 
@@ -136,7 +137,7 @@ void main(){
 
   //vec3 norm = ((finalNormal * .3 + .7) * facingRatio)*.1;
   vec3 norm = vec3(abs(finalNormal.x));
-  gl_FragColor = vec4( lookup * facing, 1.0 );
+  gl_FragColor = vec4(.2* lookup * aColor + nonFacing, 1.0 );
   //gl_FragColor = vec4(  normalTex , 1.0 );
 
 }
