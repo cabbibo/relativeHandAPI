@@ -1,0 +1,167 @@
+
+<html>
+
+<head>
+  <style>
+
+    html{ color:#fff; }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : 0px;
+      right     : 0px;
+      z-index   : 999;
+    }
+
+  </style>
+</head>
+<body>
+
+  
+<script src = "../lib/leap.js"                ></script>
+<script src = "../lib/three.js"               ></script>
+<script src = "../lib/stats.min.js"           ></script>
+
+<script src = "../RiggedSkeleton.js"          ></script>
+
+
+<script>
+
+  // Global Variables for THREE.JS
+  var container , camera, scene, renderer , stats;
+
+  // Global variable for leap
+  var frame, controller;
+
+  // our rigged skeleton
+  var riggedSkeleton;
+
+  var sceneSize = 100;
+
+  init();
+  animate();
+
+  function init(){
+
+    controller = new Leap.Controller();
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      sceneSize / 100 ,
+      sceneSize * 40
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = sceneSize *4;
+
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+
+    
+    /*
+
+      Lights
+
+    */
+
+    var light = new THREE.DirectionalLight( 0xaaaaff , 1);
+    light.position.set( 0 , 0 , 1 );
+    scene.add( light );
+
+     var light = new THREE.DirectionalLight( 0xffaaaa , 1);
+    light.position.set( 0 , 1 , 0 );
+    scene.add( light );
+
+
+     var light = new THREE.DirectionalLight( 0xaaffaa , 1);
+    light.position.set( 1 , 0 , 0 );
+    scene.add( light );
+
+    /*
+
+      Skeleton
+
+    */
+    riggedSkeleton = new RiggedSkeleton( controller , {
+
+      movementSize: 500,
+      handSize: 100
+      
+    });
+
+    riggedSkeleton.addToScene( scene );
+    
+    var mesh = new THREE.Mesh(
+      new THREE.BoxGeometry( 30 , 30  , 100 ),
+      new THREE.MeshLambertMaterial({color:0xcc9999})
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'metacarpal' );
+    riggedSkeleton.addScaledJointMesh( mesh , 'proximal' );
+    riggedSkeleton.addScaledJointMesh( mesh , 'intermediate' );
+    riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+
+    
+    controller.connect();
+  
+  }
+
+  function animate(){
+
+    riggedSkeleton.update();
+
+    stats.update();
+
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+  }
+
+</script>
+
+</body>
+</html>
