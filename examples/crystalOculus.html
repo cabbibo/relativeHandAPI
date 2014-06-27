@@ -100,7 +100,7 @@
     
      //  OCULUS
        
-    /*var bridge = new OculusBridge({
+    var bridge = new OculusBridge({
       "onOrientationUpdate" : function(quatValues) { 
         camera.quaternion.set(quatValues.x, quatValues.y, quatValues.z, quatValues.w);
       }
@@ -111,7 +111,7 @@
          // Here is the effect for the Oculus Rift
     // worldScale 100 means that 100 Units == 1m
     effect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
-    effect.setSize( window.innerWidth, window.innerHeight );*/
+    effect.setSize( window.innerWidth, window.innerHeight );
 
     
          
@@ -398,11 +398,11 @@
     sphere2.visible = true;
 
     groundMirror.render();
-    renderer.render( scene , camera );
+    //renderer.render( scene , camera );
 
     
     //OCULUS   
-    //effect.render( scene, camera );
+    effect.render( scene, camera );
     
 
   
