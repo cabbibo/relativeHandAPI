@@ -62,7 +62,7 @@ void main(){
   vec3 lightDir = normalize( lightPos -  (modelViewMatrix * vec4( vPos , 1.0 )).xyz );
   vLightDir = lightDir;
 
-  vPos +=.7 *  normal * texture2D( t_audio ,vec2( abs(normal.x) , 0. ) ).x ;
+  vPos +=.1 *  normal * texture2D( t_audio ,vec2( abs(normal.x) , 0. ) ).x ;
 
   vMVPos = (modelViewMatrix * vec4( vPos , 1.0 )).xyz;
 

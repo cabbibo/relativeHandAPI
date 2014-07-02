@@ -138,6 +138,7 @@ void main(){
   //vec3 norm = ((finalNormal * .3 + .7) * facingRatio)*.1;
   vec3 norm = vec3(abs(finalNormal.x));
   gl_FragColor = vec4(.2* lookup * aColor + nonFacing, 1.0 );
+  //gl_FragColor = vec4(facing, 1.0 );
   //gl_FragColor = vec4(  normalTex , 1.0 );
 
 }
