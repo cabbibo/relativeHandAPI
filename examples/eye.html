@@ -76,7 +76,6 @@ z-index: 999;
   loader.load( '../models/totem_6.OBJ' , function( obj ){
 
     boneGeo = obj.children[0].geometry//.geometry;
-    console.log( boneGeo );
     onLoad( 'TOTEM' );
 
     boneGeo.computeFaceNormals();
@@ -175,8 +174,6 @@ z-index: 999;
     var tNormal = THREE.ImageUtils.loadTexture( '../img/normals/moss_normal_map.jpg' );
     tNormal.wrapS = THREE.RepeatWrapping; 
     tNormal.wrapT = THREE.RepeatWrapping; 
-    console.log( 'TNOMAL');
-    console.log( tNormal );
 
     var tLookup = THREE.ImageUtils.loadTexture( '../img/iriLookup.png' );
 
