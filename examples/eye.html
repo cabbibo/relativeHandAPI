@@ -77,7 +77,7 @@ z-index: 999;
 
     boneGeo = obj.children[0].geometry//.geometry;
     console.log( boneGeo );
-    onLoad();
+    onLoad( 'TOTEM' );
 
     boneGeo.computeFaceNormals();
     boneGeo.computeVertexNormals();
@@ -91,14 +91,12 @@ z-index: 999;
 
   loader.load( '../models/cyber_bug_Mk1_93k_tris.OBJ' , function( obj ){
 
-    console.log( obj );
     skullGeo = obj.children[0].geometry//.geometry;
-    console.log( skullGeo );
 
     skullGeo.computeFaceNormals();
     skullGeo.computeVertexNormals();
 
-    onLoad();
+    onLoad( 'CYBER BUG' );
 
   });
 
@@ -114,7 +112,7 @@ z-index: 999;
   shaders.load( 'vs-planet' , 'planet' , 'vertex' );
 
   shaders.shaderSetLoaded = function(){
-   onLoad();
+   onLoad('SHADERS');
   }
  
   function init(){
@@ -343,8 +341,9 @@ z-index: 999;
 
   }*/
 
-  function onLoad(){
+  function onLoad( what ){
 
+    console.log( what );
 
     loaded ++;
 
