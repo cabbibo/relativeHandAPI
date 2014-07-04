@@ -123,13 +123,52 @@
     });
 
     riggedSkeleton.addToScene( scene );
-    
-    var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 30 , 30  , 100 ),
-      new THREE.MeshNormalMaterial()
-    );
 
-    riggedSkeleton.addScaledMeshToAll( mesh )
+
+    var joints = [
+      'metacarpal',
+      'proximal',
+      'intermediate',
+      'distal',
+    ];
+
+
+    var fingers = [
+      'thumb',
+      'index',
+      'middle',
+      'ring',
+      'pinky'
+    ];
+
+
+    var geo = new THREE.BoxGeometry( 30 , 30  , 100 );
+
+    for( var i = 0; i < joints.length; i++ ){
+  
+      for( var j = 0; j < fingers.length; j++ ){
+
+        // Theres no metacarpal on the thumb!
+        if( fingers[j] === 'thumb' && joints[i] === 'metacarpal' ){
+          continue;
+        }
+          
+        var mesh = new THREE.Mesh(
+          geo,
+          randomColorMat()
+        );
+
+        riggedSkeleton.addScaledMesh( mesh , {
+          jointType:joints[i],
+          fingerType:fingers[j]
+        });
+
+        
+
+      }
+
+    }
+
    
     controller.connect();
   
@@ -154,6 +193,20 @@
     camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
+
+  }
+
+  function randomColorMat(){
+
+    var color = new THREE.Color();
+    color.r = Math.random();
+    color.g = Math.random();
+    color.b = Math.random();
+
+    var mat = new THREE.MeshLambertMaterial();
+    mat.color = color;
+
+    return mat;
 
   }
 

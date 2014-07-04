@@ -123,13 +123,64 @@
     });
 
     riggedSkeleton.addToScene( scene );
+
+
+
+    var geo = new THREE.BoxGeometry( 30 , 30  , 100 );
+    var material = new THREE.MeshLambertMaterial()
+
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .7 , .2 , .1 );
     
     var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 30 , 30  , 100 ),
-      new THREE.MeshNormalMaterial()
+      geo,
+      mat
     );
 
-    riggedSkeleton.addScaledMeshToAll( mesh )
+    riggedSkeleton.addScaledFingerMesh( mesh , 'thumb' );
+
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .1 , .7 , .2 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledFingerMesh( mesh , 'index' );
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .1 , .2 , .7 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledFingerMesh( mesh , 'middle' );
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .7 , .2 , .7 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledFingerMesh( mesh , 'ring' );
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .2 , .7 , .7 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledFingerMesh( mesh , 'pinky' );
+
    
     controller.connect();
   

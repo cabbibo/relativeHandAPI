@@ -123,13 +123,56 @@
     });
 
     riggedSkeleton.addToScene( scene );
+
+
+
+    var geo = new THREE.BoxGeometry( 30 , 30  , 100 );
+    var material = new THREE.MeshLambertMaterial()
+
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .7 , .2 , .1 );
     
     var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 30 , 30  , 100 ),
-      new THREE.MeshNormalMaterial()
+      geo,
+      mat
     );
 
-    riggedSkeleton.addScaledMeshToAll( mesh )
+    riggedSkeleton.addScaledJointMesh( mesh , 'metacarpal' );
+
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .1 , .7 , .2 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'proximal' );
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .1 , .2 , .7 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'intermediate' );
+
+    var mat = material.clone();
+    mat.color = new THREE.Color( .7 , .2 , .7 );
+    
+    var mesh = new THREE.Mesh(
+      geo,
+      mat
+    );
+
+    riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+
+
+
    
     controller.connect();
   

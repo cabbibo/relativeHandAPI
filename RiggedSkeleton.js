@@ -44,7 +44,6 @@
     this.scaledMeshes       = [];
    
 
-
   }
 
 
@@ -782,9 +781,8 @@
 
 
 
+  // TODO
   RiggedSkeleton.prototype.exportToSkinnedMesh = function( skinnedMesh ){
-
-
 
 
   }
