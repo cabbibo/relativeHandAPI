@@ -90,6 +90,25 @@
     // Making sure our renderer is always the right size
     window.addEventListener( 'resize', onWindowResize , false );
 
+    
+    /*
+
+      Lights
+
+    */
+
+    var light = new THREE.DirectionalLight( 0xaaaaff , 1);
+    light.position.set( 0 , 0 , 1 );
+    scene.add( light );
+
+     var light = new THREE.DirectionalLight( 0xffaaaa , 1);
+    light.position.set( 0 , 1 , 0 );
+    scene.add( light );
+
+
+     var light = new THREE.DirectionalLight( 0xaaffaa , 1);
+    light.position.set( 1 , 0 , 0 );
+    scene.add( light );
 
     /*
 
@@ -106,11 +125,13 @@
     riggedSkeleton.addToScene( scene );
     
     var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 30 , 30  , 100 ),
+      new THREE.BoxGeometry( 30 , 100  , 30 ),
       new THREE.MeshNormalMaterial()
     );
 
-    riggedSkeleton.addScaledMeshToAll( mesh )
+    riggedSkeleton.addScaledMeshToAll( mesh , {
+     direction:'y' 
+    })
    
     controller.connect();
   
