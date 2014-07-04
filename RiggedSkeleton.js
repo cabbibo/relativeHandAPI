@@ -248,7 +248,20 @@
 
   }
 
-  
+ 
+  RiggedSkeleton.prototype.addScaledMeshToAll = function( object , params ){
+
+    var params = params || {};
+
+
+    for( var i = 0; i < this.fingerTypes.length; i++ ){
+
+      this.addScaledFingerMesh( object , this.fingerTypes[i] , params );
+
+    }
+
+
+  }
 
 
 

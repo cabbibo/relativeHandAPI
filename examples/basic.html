@@ -129,16 +129,7 @@
       new THREE.MeshLambertMaterial({color:0xcc9999})
     );
 
-    riggedSkeleton.addScaledJointMesh( mesh , 'proximal' );
-    riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
-
-
-    var mesh = new THREE.Mesh(
-      new THREE.BoxGeometry( 3 , 50  , 100 ),
-      new THREE.MeshNormalMaterial()
-    );
-
-    riggedSkeleton.addScaledFingerMesh( mesh , 'index' );
+    riggedSkeleton.addScaledMeshToAll( mesh )
    
     controller.connect();
   
