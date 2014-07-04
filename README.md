@@ -353,3 +353,9 @@ var mesh = new THREE.Mesh(
 riggedSkeleton.addFingerMesh( mesh , 'thumb' );
 
 ```
+
+
+Contact
+======
+
+icohen@leapmotion.com || @cabbibo
