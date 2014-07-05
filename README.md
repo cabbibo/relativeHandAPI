@@ -255,15 +255,26 @@ exactly the skeleton works. Basically what happens is the following:
 Some Important Notes
 -----
 
-- When a mesh is added, is by default thought of as pointing in the Z direction
+- When a mesh is added, is by default thought of as pointing in the Z direction. 
+  This means that the mesh will be measured, scaled and rotated so that the Z direction
+  is pointed down the length of the joint. You can have it point in the X and Y by passing
+  it through in the parameters
+
   To add a mesh pointing in another directions, check out the example:
   [ Non Z Mesh ]( http://leapmotion.github.io/Leap-Three-Rigged-Skeleton/examples/nonZMesh.html )
 
 - When a mesh is added, its length is automatically calculated. 
+  When it is scaled to fit the joint, it will use this length as the length that reaches 
+  from joint to joint. If you want your mesh to reach past the next joint, you can simply change the 
+  mesh length
+
   To add a mesh and define your own length, check out the example:
   [ Own Length Mesh ]( http://leapmotion.github.io/Leap-Three-Rigged-Skeleton/examples/ownLengthMesh.html )
 
-- When a mesh is added, it is considered to be centered. 
+- When a mesh is added, it is considered to be centered around 0, and will move 0 to the center of the joint.
+  however, if you want 0 to be at the bas of the joint rather than the center, 
+  you can pass it through as a parameter
+
   To add a non centered mesh , check out the examples:
   [ Non Centered Mesh ]( http://leapmotion.github.io/Leap-Three-Rigged-Skeleton/examples/nonCenteredMesh.html )
 

@@ -2,8 +2,16 @@
 
     var params = params || {};
 
+
+    // How large the hand is
     this.handSize     = params.handSize     || 1000;
+    
+    // How far the hand can move
     this.movementSize = params.movementSize || 100;
+
+    // If the hand is place based on camera, or 0
+    this.absolute     = params.absolute     || false;
+    
 
     this.controller   = controller;
     
@@ -367,12 +375,13 @@
     var metaPos = this.threeDif( frameHand.palmPosition , m.prevJoint );
     metaPos.multiplyScalar( this.scaledSize );
     
-    ourFinger.metacarpal.position = metaPos;//this.threeDif( frameHand.palmPosition , m.prevJoint );
+    ourFinger.metacarpal.position = metaPos;
 
     var quat = new THREE.Quaternion();
     quat.setFromRotationMatrix( hMatrix.clone().transpose() );
-    
+
     ourFinger.metacarpal.position.applyQuaternion( quat ); 
+
 
 
     // The remaining fingers can just be placed using z
@@ -506,12 +515,21 @@
       var frameFingers    = this.orderFingers( frameHand );
  
       var pPalm           = frameHand.palmPosition;
-      this.leapToCamera( this.hand.position , camera, pPalm , this.movementSize );
      
+      if( this.absolute ){
+     
+        this.hand.position = this.leapToScene( pPalm , this.movementSize );
 
-      this.cameraInverse = new THREE.Matrix4().extractRotation( camera.matrixWorldInverse);
+      }else{
 
-      this.hand.matrix.multiply( this.cameraInverse );
+        this.leapToCamera( this.hand.position , camera, pPalm , this.movementSize );
+
+        this.cameraInverse = new THREE.Matrix4().extractRotation( camera.matrixWorldInverse);
+
+        this.hand.matrix.multiply( this.cameraInverse );
+
+
+      }
 
       for( var i = 0; i < this.fingers.length; i++ ){
 
@@ -557,26 +575,7 @@
 
   }
 
-  RiggedSkeleton.prototype.getHandBasis = function( hand  ){
-
-    var rotationMatrix  = this.handRotationMatrix( hand );
-
-    // Corrector 'corrects' for which basis
-    var corrector;
-
-    if( hand.type === 'left' ){
-      corrector = this.baseMatrixLeft;
-    }else{
-      corrector = this.baseMatrixRight;
-    }
-
-    rotationMatrix.multiply( corrector.clone().transpose() );
-
-    return rotationMatrix;
-
-  }
-
-  // need to know if basis is left or right handed
+// need to know if basis is left or right handed
   RiggedSkeleton.prototype.matrixFromBasis = function( b , type ){
    
     var m = new THREE.Matrix4()
@@ -610,31 +609,7 @@
   }
 
  
-  // Gets our hand rotation matrix
-  
-  RiggedSkeleton.prototype.handRotationMatrix = function( hand ){
 
-    var a1 = new THREE.Vector3().fromArray( hand.direction  );
-    var a2 = new THREE.Vector3().fromArray( hand.palmNormal );
-    var a3;
-    
-    if( hand.type == 'left' ){
-      a3 = a2.clone().cross( a1 );
-    }else{
-      a3 = a1.clone().cross( a2 );
-    }
-
-    var matrix = new THREE.Matrix4( 
-      a1.x , a2.x , a3.x, 0,
-      a1.y , a2.y , a3.y, 0,
-      a1.z , a2.z , a3.z, 0,
-      0    , 0    , 0   , 1
-    )
-
-    return matrix; 
-
-  }
- 
 
 
   // Gets a difference between two leap vectors, in three

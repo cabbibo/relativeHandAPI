@@ -1,0 +1,268 @@
+
+<html>
+
+<head>
+  <style>
+
+    html{ color:#fff; background:#000; }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+
+    #credits{
+
+      position:absolute;
+      top:0px;
+      left:0px;
+      z-index:99;
+
+    }
+
+    a{
+      color:#fff;
+      opacity:.8;
+    }
+
+    a:hover{
+      opacity:1;
+    }
+
+
+  </style>
+</head>
+<body>
+
+  <div id="loading"> LOADING MODELS </div>
+  <div id="credits"> 
+    <a href="http://www.turbosquid.com/FullPreview/Index.cfm/ID/623330" target="_blank"> Skull Model by samc4d </a><br/>
+    <a href="http://www.turbosquid.com/FullPreview/Index.cfm/ID/269707" target="_blank"> Bone Model by 3DaMaze </a>
+  </div>
+
+  
+<script src = "../lib/leap.js"                ></script>
+<script src = "../lib/three.js"               ></script>
+<script src = "../lib/OBJLoader.js"           ></script>
+
+<script src = "../RiggedSkeleton.js"          ></script>
+
+
+<script>
+
+  // Global Variables for THREE.JS
+  var container , camera, scene, renderer , stats;
+
+  // Global variable for leap
+  var frame, controller;
+
+  // our rigged skeleton
+  var riggedSkeleton;
+
+  var sceneSize = 100;
+
+  var skullGeo;
+  var boneGeo;
+ 
+  var loaded = 0;
+  var neededToLoad = 2;
+ 
+  var loader  = new THREE.OBJLoader();
+  loader.load( '../models/bone.obj' , function( obj ){
+ 
+    boneGeo = obj.children[0].geometry;
+    onLoad();
+ 
+  });
+ 
+  loader.load( '../models/skull1.obj' , function( obj ){
+ 
+    skullGeo = obj.children[0].geometry;
+    onLoad();
+ 
+  });
+
+
+  init();
+  animate();
+
+  function init(){
+
+    controller = new Leap.Controller();
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      sceneSize / 100 ,
+      sceneSize * 40
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = sceneSize *4;
+
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+
+    /*
+
+      Lights
+
+    */
+
+    var light = new THREE.DirectionalLight( 0xaaaaff , 1);
+    light.position.set( 0 , 0 , 1 );
+    scene.add( light );
+
+     var light = new THREE.DirectionalLight( 0xffaaaa , 1);
+    light.position.set( 0 , 1 , 0 );
+    scene.add( light );
+
+
+     var light = new THREE.DirectionalLight( 0xaaffaa , 1);
+    light.position.set( 1 , 0 , 0 );
+    scene.add( light );
+
+
+
+    /*
+
+      Skeleton
+
+    */
+    riggedSkeleton = new RiggedSkeleton( controller , {
+
+      movementSize: 500,
+      handSize: 200
+      
+    });
+
+    riggedSkeleton.addToScene( scene );
+
+    var skullMesh = new THREE.Mesh(
+      skullGeo,
+      new THREE.MeshLambertMaterial({color:0xff6644})
+    );
+
+    skullMesh.scale.multiplyScalar( .06 );
+    skullMesh.rotation.x = -Math.PI / 2;
+    riggedSkeleton.addScaledMeshToAll( skullMesh , {
+
+      centered:false,
+      length:1000
+      
+    });
+
+
+    var sMesh = new THREE.Mesh(
+      skullMesh.geometry,
+      skullMesh.material.clone()
+    );
+
+    sMesh.scale.multiplyScalar( .06 );
+    sMesh.rotation.x = -Math.PI/2;
+    sMesh.material.color = new THREE.Color( 0, .5,1);
+    sMesh.materialNeedsUpdate = true;
+
+    riggedSkeleton.addJointMesh( sMesh , 'tip' );
+
+
+    var geo = new THREE.Geometry();
+
+    for( var i = 0; i < 6; i ++ ){
+
+      var boneMesh = new THREE.Mesh( boneGeo );
+  
+      boneMesh.rotation.z = -Math.PI/2;
+      boneMesh.rotation.x = -Math.PI/2;
+
+      boneMesh.position.x = ( i -2) * 30;
+      boneMesh.position.y = -50;
+      boneMesh.position.z = -400;
+      THREE.GeometryUtils.merge( geo , boneMesh );
+
+    }
+
+    var boneMesh = new THREE.Mesh( geo , new THREE.MeshLambertMaterial({
+      color:0xc0ffee
+    }));
+
+
+
+
+
+    riggedSkeleton.addScaledMeshToAll( boneMesh , {
+
+      direction:'z',
+      centered:false,
+      length:500
+      
+    });
+
+
+
+   
+    controller.connect();
+  
+  }
+
+  function animate(){
+
+    riggedSkeleton.update();
+
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+  }
+
+  function onLoad(){
+
+    loaded ++;
+    
+    if( loaded === neededToLoad ){
+
+      document.getElementById("loading").style.visibility = "none";
+      init();
+      animate();
+
+    }
+
+
+  }
+
+</script>
+
+</body>
+</html>

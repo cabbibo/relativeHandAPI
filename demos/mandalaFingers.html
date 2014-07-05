@@ -1,0 +1,261 @@
+
+<html>
+
+<head>
+  <style>
+
+    html{ color:#fff; }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : 0px;
+      right     : 0px;
+      z-index   : 999;
+    }
+
+  </style>
+</head>
+<body>
+
+  
+<script src = "../lib/leap.js"                ></script>
+<script src = "../lib/three.js"               ></script>
+<script src = "../lib/stats.min.js"           ></script>
+
+<script src = "../RiggedSkeleton.js"          ></script>
+
+
+<script>
+
+  // Global Variables for THREE.JS
+  var container , camera, scene, renderer , stats;
+
+  // Global variable for leap
+  var frame, controller;
+
+  // our rigged skeleton
+  var riggedSkeletons = [];
+
+  var sceneSize = 100;
+
+  init();
+  animate();
+
+  function init(){
+
+    controller = new Leap.Controller();
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      sceneSize / 100 ,
+      sceneSize * 40
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = sceneSize *4;
+
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+
+    
+    /*
+
+      Lights
+
+    */
+
+    var light = new THREE.DirectionalLight( 0xaaaaff , 1);
+    light.position.set( 0 , 0 , 1 );
+    scene.add( light );
+
+     var light = new THREE.DirectionalLight( 0xffaaaa , 1);
+    light.position.set( 0 , 1 , 0 );
+    scene.add( light );
+
+
+     var light = new THREE.DirectionalLight( 0xaaffaa , 1);
+    light.position.set( 1 , 0 , 0 );
+    scene.add( light );
+
+
+
+    /*
+      Skeleton  
+    */
+
+    var c1 = new THREE.Color( 1. , .3 , .1 );
+    var c2 = new THREE.Color( .5  , .2 , 0 );
+    var c3 = new THREE.Color( 1. , .7 , 0 );
+    var c4 = new THREE.Color( .9 , .3 , .3 );
+
+    createMandala( 50 , 50 , 10 , c1 , c2 , c3 , c4 ); 
+
+    var c1 = new THREE.Color( 0. , 1 , .9 );
+    var c2 = new THREE.Color( 0. , .5 , 1 );
+    var c3 = new THREE.Color( 0 , .2 , 1 );
+    var c4 = new THREE.Color( .1 , 0 , 1 );
+
+    createMandala( 100 , 100 , 20 , c1 , c2 , c3 , c4 );  
+      
+    controller.connect();
+  
+  }
+
+
+
+
+  function createMandala( handSize , size , numOf , color1 , color2 , color3 , color4 ){
+
+
+
+    var r = size;
+
+    var geo = new THREE.BoxGeometry( 30 , 30  , 100 );
+    var material = new THREE.MeshPhongMaterial()
+
+
+
+    for( var i = 0; i < numOf; i++ ){
+
+      var theta = (i / numOf ) * 2 * Math.PI;
+      var x =  r * Math.cos( theta );
+      var y =  r * Math.sin( theta );
+
+      var object = new THREE.Object3D();
+
+      object.position.x = x;
+      object.position.y = y;
+
+      object.rotation.z = theta - Math.PI / 2;
+      scene.add( object );
+
+      var riggedSkeleton = new RiggedSkeleton( controller , {
+        movementSize: 0.0001,
+        handSize: handSize,
+        absolute: true
+      });
+
+
+      riggedSkeletons.push( riggedSkeleton );
+      riggedSkeleton.addToScene( object );
+      
+      var mat = material.clone();
+      mat.color = color1;
+      mat.specular = color2;
+      
+      var mesh = new THREE.Mesh(
+        geo,
+        mat
+      );
+
+      riggedSkeleton.addScaledJointMesh( mesh , 'metacarpal' );
+
+
+      var mat = material.clone();
+      mat.color = color2;
+      mat.specular = color3;
+      mat.emissive = color4;
+
+      
+      var mesh = new THREE.Mesh(
+        geo,
+        mat
+      );
+
+      riggedSkeleton.addScaledJointMesh( mesh , 'proximal' );
+
+      var mat = material.clone();
+      mat.color = color3;
+      mat.specular = color4;
+
+      
+      var mesh = new THREE.Mesh(
+        geo,
+        mat
+      );
+
+      riggedSkeleton.addScaledJointMesh( mesh , 'intermediate' );
+
+      var mat = material.clone();
+      mat.color = color4;
+      mat.specular = color1;
+
+      
+      var mesh = new THREE.Mesh(
+        geo,
+        mat
+      );
+
+      riggedSkeleton.addScaledJointMesh( mesh , 'distal' );
+
+
+    }
+
+
+
+
+  }
+
+
+
+  function animate(){
+
+    for( var i = 0; i < riggedSkeletons.length; i++ ){
+      riggedSkeletons[i].update();
+    }
+
+    stats.update();
+
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+  }
+
+</script>
+
+</body>
+</html>
