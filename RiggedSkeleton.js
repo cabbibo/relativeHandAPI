@@ -375,7 +375,7 @@
     var metaPos = this.threeDif( frameHand.palmPosition , m.prevJoint );
     metaPos.multiplyScalar( this.scaledSize );
     
-    ourFinger.metacarpal.position = metaPos;
+    ourFinger.metacarpal.position.copy( metaPos );
 
     var quat = new THREE.Quaternion();
     quat.setFromRotationMatrix( hMatrix.clone().transpose() );
